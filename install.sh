@@ -78,16 +78,3 @@ then
 else
 	eecho "Unknown variable!"
 fi
-
-# Stop further execution
-exit $?
-
-### Possible to add: 
-echo -n "[4/?] Generating local configuration file... "
-python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null
-[ $? -gt 0 ] && eecho "Failed!"
-echo "Done"
-
-echo "[5/?] Executing docker compose up -d in $HOME_DIR/ton-access as root... "
-cd $TON_ACCESS_DIR && sudo docker compose up -d
-[ $? -eq 0 ] && echo "Removing $GIT_PROJECT_DIR..." && rm -rf $GIT_PROJECT_DIR && echo "Done"
