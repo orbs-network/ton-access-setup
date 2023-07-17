@@ -2,8 +2,7 @@
 # Description: This script will prepare ton-access-setup Git project for deployment of docker containers.
 
 HOME_DIR="$HOME"
-SLACK_URL="" # Dev
-SLACK_URL="" # Prod
+SLACK_URL=""
 SCRIPT_NAME=$(basename $0)
 TON_ACCESS_DIR=""
 
