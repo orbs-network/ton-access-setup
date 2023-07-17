@@ -31,8 +31,9 @@ installAccessSetup() {
 	echo "Done"
 
 	echo -n "[3/3] Copying ton-access to $HOME_DIR... "
-	cp -r ./ton-access $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed!";
 	TON_ACCESS_DIR="$HOME_DIR/ton-access"
+ 	[ -d $TON_ACCESS_DIR ] && rm -rf $TON_ACCESS_DIR
+	cp -r ./ton-access $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed!";
 	echo "Done"
 	rm -rf $CONFIG_DIR
 	echo "Done"
