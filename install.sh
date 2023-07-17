@@ -69,7 +69,7 @@ then
 	fi
 elif [ "$1" == "--cron" ]
 then
-	FETCH=$(git fetch --dry-run)
+	FETCH=$(git fetch --dry-run >&1)
 	[ -z "$FETCH" ] && exit 0;
 	PULL=$(git pull)
 	[[ $PULL =~ "Already up to date" ]] && send_slack "Nothing to pull from git!" && exit 0
