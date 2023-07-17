@@ -36,7 +36,3 @@ echo "Done"
 echo "[5/?] Executing docker compose up -d in $MAIN_DIR/ton-access as root... "
 cd $TON_ACCESS_DIR && sudo docker compose up -d
 [ $? -eq 0 ] && echo "Removing $GIT_PROJECT_DIR..." && rm -rf $GIT_PROJECT_DIR && echo "Done"
-
-### Old install.sh content:
-cp -r ./ton-access ../
-source ../ton-access/get-global-config.sh
