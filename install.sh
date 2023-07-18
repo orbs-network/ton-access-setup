@@ -10,7 +10,7 @@ send_slack () {
 	curl -s -X POST $SLACK_URL -H 'Content-type: application/json' --data '{"text":"'"$(hostname): $1"'"}' >/dev/null
 }
 eecho() {
-	echo $@ 1>&2
+	echo -e "$@" 1>&2
 	exit 1;
 }
 checkCronjob() {
@@ -46,18 +46,21 @@ installAccessSetup() {
  	cd -
   	echo "Done"
 }
-
-[[ ! $(id -un) == "ubuntu" ]] && eecho "Execute this script as \"ubuntu\" user.";
+USER=$(id -un)
+[[ ! $USER == "ubuntu" ]] && eecho "Execute this script as \"ubuntu\" user.";
 [ -z $(find . -type d -name ".git") ] && eecho "Execute this script inside of Git project."
-APPS="git python3 curl crontab"
-for i in $APPS
+[ $(docker ps &>/dev/null; echo $?) -gt 0 ] && eecho "User $USER is unable to execute docker commands!"
+APPS="git python3 curl crontab docker mytonctrl"
+declare -a DEPENDENCIES=()
+for APP in $APPS
 do
-	command -v $i > /dev/null 2>&1
-	if [ ! $? -eq 0 ]
-	then
-		eecho "$i Not found! Please install this app first."
-	fi
+        command -v $APP > /dev/null 2>&1
+        if [ ! $? -eq 0 ]
+        then
+                DEPENDENCIES+=$(echo -e "\n\t - $APP")
+        fi
 done
+[ ! -z "$DEPENDENCIES" ] && eecho "Dependencies:$DEPENDENCIES\nInstall dependencies to continue."
 REPO_DIR=$(git rev-parse --show-toplevel); [ -z "$REPO_DIR" ] && eecho "Unable to get full path of repository!"
 REPO_NAME="$(basename $REPO_DIR)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository!"
 
