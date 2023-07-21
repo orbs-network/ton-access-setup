@@ -39,7 +39,7 @@ services:
       timeout: 3s
       retries: 12
   v2-testnet:
-    image: toncenter/ton-http-api
+    image: toncenter/ton-http-api:v2.0.33
     volumes:
       - type: bind
         source: ./config
