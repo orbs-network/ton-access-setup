@@ -17,31 +17,36 @@ checkCronjob() {
 	crontab -l|grep '#'$REPO_NAME''
 }
 installAccessSetup() {
-	echo -n "[1/5] Creating config directory... "
+	echo -n "[1/6] Creating config directory... "
 	CONFIG_DIR="$REPO_DIR/ton-access/config"
 	[ -d $CONFIG_DIR ] && rm -rf $CONFIG_DIR
 	mkdir $CONFIG_DIR
 	[ ! -d "$CONFIG_DIR" ] && eecho "Failed!"
 	echo "Done"
 
-	echo -n "[2/5] Downloading global-mainnet.json and global-testnet.json... "
+	echo -n "[2/6] Downloading global-mainnet.json and global-testnet.json... "
 	curl -sL https://ton-blockchain.github.io/global.config.json > $CONFIG_DIR/global-mainnet.json; [ $? -gt 0 ] && eecho "Error occurred while trying to download global-mainnet.json file!";
 	curl -sL https://ton-blockchain.github.io/testnet-global.config.json > $CONFIG_DIR/global-testnet.json; [ $? -gt 0 ] && eecho "Error occurred while trying to download global-testnet.json file!";
 	echo "Done"
 
-	echo -n "[3/5] Copying ton-access to $HOME_DIR... "
+	echo "[3/6] Generating local configuration file... "
+	python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null
+	[ $? -gt 0 ] && eecho "Failed!"
+	echo "Done"
+
+	echo -n "[4/6] Copying \"/usr/bin/ton/local.config.json\" in $HOME_DIR/ton-access/config/ ... "
+	cp /usr/bin/ton/local.config.json $HOME_DIR/ton-access/config/
+	[ $? -gt 0 ] && eecho "Failed!"
+	echo "Done"
+
+	echo -n "[5/6] Copying ton-access to $HOME_DIR... "
 	TON_ACCESS_DIR="$HOME_DIR/ton-access"
  	[ -d $TON_ACCESS_DIR ] && rm -rf $TON_ACCESS_DIR
 	cp -r ./ton-access $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed!";
 	echo "Done"
 	rm -rf $CONFIG_DIR
- 
- 	echo -n "[4/5] Generating local configuration file... "
-	python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null
-	[ $? -gt 0 ] && eecho "Failed!"
-	echo "Done"
 
-	echo -n "[5/5] Executing docker compose up -d in $MAIN_DIR/ton-access as root... "
+	echo -n "[6/6] Executing \"docker compose up -d\" in $HOME_DIR/ton-access as root... "
 	cd $TON_ACCESS_DIR && sudo docker compose up -d
  	cd -
   	echo "Done"
