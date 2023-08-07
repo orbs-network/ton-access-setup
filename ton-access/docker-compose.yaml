@@ -1,27 +1,20 @@
 version: "3.7"
 services:
   v2-mainnet:
-    image: toncenter/ton-http-api
+    image: orbsnetwork/ton-http-api:v3.0.0
     volumes:
-      - /usr/bin/ton/:/ton
-    ports:
-      - 10001:8081
+      - type: bind
+        source: ../private
+        target: /private    
+    env_file:
+      - v2.env
     environment:
       - TON_API_CACHE_ENABLED=1
       - TON_API_CACHE_REDIS_ENDPOINT=cache_redis
       - TON_API_CACHE_REDIS_PORT=6379
       - TON_API_CACHE_REDIS_TIMEOUT=1
-      - TON_API_LOGS_JSONIFY=0
-      - TON_API_LOGS_LEVEL=ERROR
-      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json
-      - TON_API_TONLIB_KEYSTORE=/tmp/ton_keystore/
-      - TON_API_TONLIB_PARALLEL_REQUESTS_PER_LITESERVER=50
-      - TON_API_TONLIB_CDLL_PATH
-      - TON_API_TONLIB_REQUEST_TIMEOUT=10
-      - TON_API_GET_METHODS_ENABLED=1
-      - TON_API_JSON_RPC_ENABLED=1
-      - TON_API_WEBSERVERS_WORKERS=1
-      - TON_API_ROOT_PATH=/
+      - TON_API_TONLIB_LITESERVER_CONFIG=/private/mainnet-am-01.json            
+      - TON_BRANCH=master
     deploy:
       resources:
         limits:
@@ -39,25 +32,17 @@ services:
       timeout: 3s
       retries: 12
   v2-testnet:
-    image: toncenter/ton-http-api:v2.0.33
+    image: orbsnetwork/ton-http-api:v3.0.0
     volumes:
       - type: bind
-        source: ./config
+        source: ../private
         target: /private
-    ports:
-      - 10002:8081
+    env_file:
+      - v2.env
     environment:
       - TON_API_CACHE_ENABLED=0
-      - TON_API_LOGS_JSONIFY=0
-      - TON_API_LOGS_LEVEL=ERROR
-      - TON_API_TONLIB_LITESERVER_CONFIG=/private/global-testnet.json
-      - TON_API_TONLIB_KEYSTORE=/tmp/ton_keystore/
-      - TON_API_TONLIB_PARALLEL_REQUESTS_PER_LITESERVER=50
-      - TON_API_TONLIB_CDLL_PATH
-      - TON_API_TONLIB_REQUEST_TIMEOUT=10
-      - TON_API_GET_METHODS_ENABLED=1
-      - TON_API_JSON_RPC_ENABLED=1
-      - TON_API_WEBSERVERS_WORKERS=1
+      - TON_API_TONLIB_LITESERVER_CONFIG=/private/global-testnet.json      
+      - TON_BRANCH=testnet
     deploy:
       resources:
         limits:
