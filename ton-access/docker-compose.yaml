@@ -1,9 +1,9 @@
 version: "3.7"
 services:
   v2-mainnet:
-    image: orbsnetwork/ton-http-api:v3.0.0
+    image: toncenter/ton-http-api:mainnet
     volumes:
-      - /usr/bin/ton/:/ton      
+      - /usr/bin/ton/:/ton
     env_file:
       - v2.env
     environment:
@@ -11,44 +11,41 @@ services:
       - TON_API_CACHE_REDIS_ENDPOINT=cache_redis
       - TON_API_CACHE_REDIS_PORT=6379
       - TON_API_CACHE_REDIS_TIMEOUT=1
-      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json
+      - TON_API_CACHE_ENABLED=0
+      - TON_REPO=
       - TON_BRANCH=master
+      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json
     deploy:
       resources:
         limits:
           cpus: "2"
           memory: 2gb
     restart: unless-stopped
-    networks:
-      - internal
+    command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
     depends_on:
       - cache_redis
-    command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
     healthcheck:
       test: curl -sS http://127.0.0.1:8081${TON_API_ROOT_PATH}/healthcheck || echo 1
       interval: 15s
       timeout: 3s
       retries: 12
   v2-testnet:
-    image: orbsnetwork/ton-http-api:v3.0.0
+    image: toncenter/ton-http-api:testnet
     volumes:
-      - type: bind
-        source: ../private
-        target: /private
+      - ./config:/config
     env_file:
       - v2.env
     environment:
       - TON_API_CACHE_ENABLED=0
-      - TON_API_TONLIB_LITESERVER_CONFIG=/private/global-testnet.json      
+      - TON_REPO=
       - TON_BRANCH=testnet
+      - TON_API_TONLIB_LITESERVER_CONFIG=/config/global-testnet.json
     deploy:
       resources:
         limits:
           cpus: "2"
           memory: 2gb
     restart: unless-stopped
-    networks:
-      - internal
     command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
     healthcheck:
       test: curl -sS http://127.0.0.1:8081${TON_API_ROOT_PATH}/healthcheck || echo 1
@@ -56,41 +53,31 @@ services:
       timeout: 3s
       retries: 12
   v4-mainnet:
-    image: "orbsnetwork/ton-api-v4:v44.5"
+    image: "orbsnetwork/ton-api-v4:v46"
     restart: unless-stopped
-    networks:
-      - internal
-    ports:
-      - "20001:3000"
     environment:
       - TON_CONFIG=http://nginx/ton/local.config.json
     deploy:
       resources:
         limits:
           cpus: "2"
-          memory: 2gb
+          memory: 500m
   v4-testnet:
-    image: "orbsnetwork/ton-api-v4:v43"
+    image: "orbsnetwork/ton-api-v4:v46"
     restart: unless-stopped
-    networks:
-      - internal
-    ports:
-      - "20002:3000"
     environment:
       - TON_CONFIG=https://orbs-ton-gateway.s3.us-east-2.amazonaws.com/live-testnet.json
     deploy:
       resources:
         limits:
           cpus: "2"
-          memory: 2gb
+          memory: 500m
   cache_redis:
     image: redis:alpine
     volumes:
       - type: bind
         source: ./redis/data
         target: /data
-    networks:
-      - internal
     restart: unless-stopped
     deploy:
       resources:
@@ -104,8 +91,6 @@ services:
       interval: 15s
       timeout: 3s
       retries: 12
-    networks:
-      - internal
     env_file:
       - fastly.env
     deploy:
@@ -126,10 +111,11 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - /usr/bin/ton/:/ton
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1gb
     restart: unless-stopped
-    networks:
-      - internal
     depends_on:
       - mngr
-networks:
-  internal:
