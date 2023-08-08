@@ -1,3 +1,0 @@
-[submodule "ton-http-api"]
-	path = ton-http-api
-	url = https://github.com/toncenter/ton-http-api.git
