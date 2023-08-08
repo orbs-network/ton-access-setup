@@ -26,4 +26,4 @@ function build() {
 # build mainnet
 build "mainnet" "master"
 # build testnet
-#build testnet testnet
+build "testnet" "testnet"

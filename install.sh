@@ -46,7 +46,7 @@ installAccessSetup() {
 	echo "Done"
 	rm -rf $CONFIG_DIR
 
-	echo -n "[6/7] build v2 local docker images"
+	echo -n "[6/7] build v2 local docker images testnet and mainnet"
 	V2_DIR="$HOME_DIR/ton-http-api"
  	[ -d $V2_DIR ] && rm -rf $V2_DIR
 	source ./build-v2.sh
