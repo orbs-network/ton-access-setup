@@ -53,6 +53,9 @@ installAccessSetup() {
 	echo "Done"
 	rm -rf $CONFIG_DIR
 
+	
+	echo 'alias dc="docker compose"' >> ~/.bashrc
+
 	echo -n "[7/7] Executing \"docker compose up -d\" in $HOME_DIR/ton-access as root... "
 	cd $TON_ACCESS_DIR && sudo docker compose up -d
  	cd -
