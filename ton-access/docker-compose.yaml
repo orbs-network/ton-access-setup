@@ -3,9 +3,7 @@ services:
   v2-mainnet:
     image: orbsnetwork/ton-http-api:v3.0.0
     volumes:
-      - type: bind
-        source: ../private
-        target: /private    
+      - /usr/bin/ton/:/ton      
     env_file:
       - v2.env
     environment:
@@ -13,7 +11,7 @@ services:
       - TON_API_CACHE_REDIS_ENDPOINT=cache_redis
       - TON_API_CACHE_REDIS_PORT=6379
       - TON_API_CACHE_REDIS_TIMEOUT=1
-      - TON_API_TONLIB_LITESERVER_CONFIG=/private/mainnet-am-01.json            
+      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json
       - TON_BRANCH=master
     deploy:
       resources:
