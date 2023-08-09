@@ -34,17 +34,17 @@ installAccessSetup() {
 	[ $? -gt 0 ] && eecho "Failed!"
 	echo "Done"
 
-	echo -n "[4/7] Copying \"/usr/bin/ton/local.config.json\" in $HOME_DIR/ton-access/config/ ... "
-	cp /usr/bin/ton/local.config.json $HOME_DIR/ton-access/config/
-	[ $? -gt 0 ] && eecho "Failed!"
-	echo "Done"
-
-	echo -n "[5/7] Copying ton-access to $HOME_DIR... "
+	echo -n "[4/7] Copying ton-access to $HOME_DIR... "
 	TON_ACCESS_DIR="$HOME_DIR/ton-access"
  	[ -d $TON_ACCESS_DIR ] && rm -rf $TON_ACCESS_DIR
 	cp -r ./ton-access $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed!";
 	echo "Done"
 	rm -rf $CONFIG_DIR
+
+	echo -n "[5/7] Copying \"/usr/bin/ton/local.config.json\" in $HOME_DIR/ton-access/config/ ... "
+	cp /usr/bin/ton/local.config.json $HOME_DIR/ton-access/config/
+	[ $? -gt 0 ] && eecho "Failed!"
+	echo "Done"
 
 	echo -n "[6/7] build v2 local docker images testnet and mainnet"
 	V2_DIR="$HOME_DIR/ton-http-api"
