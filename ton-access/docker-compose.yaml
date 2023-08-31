@@ -85,7 +85,7 @@ services:
           cpus: "2"
           memory: 2gb
   mngr:
-    image: orbsnetwork/ton-access-mngr:v1.0.2
+    image: orbsnetwork/ton-access-mngr:v1.1.0
     healthcheck:
       test: curl -sS http://127.0.0.1:3000/health || echo 1
       interval: 15s
