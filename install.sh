@@ -1,5 +1,5 @@
 #!/bin/bash
-# Description: This script will prepare ton-access-setup Git project for deployment of docker containers.
+# Description: This script will prepare ton-access-setup Git project for deployment of docker containers and add a cronjob that will update docker containers on new tag released.
 
 HOME_DIR="$HOME"
 SLACK_URL=""
