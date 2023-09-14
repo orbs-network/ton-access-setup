@@ -22,7 +22,7 @@ function build() {
     # Run docker compose build
     docker compose build
     # Check if build failed
-    [ ! $? -eq 0] && echo "Unable to build tag: $tag and branch: $branch!" && exit 1;
+    [ ! $? -eq 0 ] && echo "Unable to build tag: $tag and branch: $branch!" && exit 1;
 }
 
 # build mainnet
