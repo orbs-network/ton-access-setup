@@ -92,10 +92,11 @@ then
 	fi
 elif [ "$1" == "--cron" ]
 then
-	FETCH=$(git fetch --dry-run 2>&1)
+	FETCH=$(git fetch --tags --dry-run 2>&1 | grep "new tag")
 	[ -z "$FETCH" ] && exit 0;
 	PULL=$(git pull)
 	[[ $PULL =~ "Already up to date" ]] && send_slack "Nothing to pull from git!" && exit 0
+	git pull --tags
 	STATUS=$(git status --porcelain)
 	[ ! -z "$STATUS" ] && send_slack "git status: $STATUS!"
 	installAccessSetup
