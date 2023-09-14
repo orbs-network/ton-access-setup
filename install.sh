@@ -58,6 +58,7 @@ installAccessSetup() {
  	cd -
   	echo "Done"
 }
+cd $HOME_DIR/ton-access-setup
 USER=$(id -un)
 [[ ! $USER == "ubuntu" ]] && eecho "Execute this script as \"ubuntu\" user.";
 [ -z $(find . -type d -name ".git") ] && eecho "Execute this script inside of Git project."
@@ -77,7 +78,6 @@ REPO_DIR=$(git rev-parse --show-toplevel); [ -z "$REPO_DIR" ] && eecho "Unable t
 REPO_NAME="$(basename $REPO_DIR)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository!"
 
 ### Main
-cd $REPO_DIR
 if [ $# -eq 0 ]
 then
 	installAccessSetup
