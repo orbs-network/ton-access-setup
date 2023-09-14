@@ -92,6 +92,7 @@ then
 	fi
 elif [ "$1" == "--cron" ]
 then
+	cd "$HOME_DIR/$REPO_NAME/"
 	FETCH=$(git fetch --tags --dry-run 2>&1 | grep "new tag")
 	[ -z "$FETCH" ] && exit 0;
 	PULL=$(git pull)
