@@ -30,3 +30,4 @@ build "mainnet" "master"
 # build testnet
 build "testnet" "testnet"
 cd -
+rm -rf ton-http-api/
