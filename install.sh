@@ -58,6 +58,7 @@ installAccessSetup() {
  	cd -
   	echo "Done"
 }
+### Main
 cd $HOME_DIR/ton-access-setup
 USER=$(id -un)
 [[ ! $USER == "ubuntu" ]] && eecho "Execute this script as \"ubuntu\" user.";
@@ -77,7 +78,6 @@ done
 REPO_DIR=$(git rev-parse --show-toplevel); [ -z "$REPO_DIR" ] && eecho "Unable to get full path of repository!"
 REPO_NAME="$(basename $REPO_DIR)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository!"
 
-### Main
 if [ $# -eq 0 ]
 then
 	installAccessSetup
@@ -85,7 +85,7 @@ then
 	JOB=$(checkCronjob)
 	if [ -z "$JOB" ]; then
 		echo -n "Installing cron job... "
-		(crontab -l; echo -e '* * * * * /bin/bash -c '$HOME_DIR'/'$REPO_NAME'/install.sh --cron;#'$REPO_NAME'') | crontab -
+		(crontab -l; echo -e '* * * * * cd /home/ubuntu/ton-access-setup/ && /bin/bash ./install.sh --cron 2>&1 >> $HOME/ton-access-setup.log;#'$REPO_NAME'') | crontab -
 		JOB=$(checkCronjob)
 		[ -z "$JOB" ] && eecho "Failed to install cron job!"
 		echo "Done"
