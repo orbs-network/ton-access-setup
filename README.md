@@ -1,12 +1,10 @@
-# ton-access-nodes
+# ton-access-setup
 config of yaml, nginx and env for all nodes.
-each /node/[hostname] stands for production node. 
 
 ## install
 - ssh to target machine
 - create liteserver config
 - ssh-keygen -t rsa
-- add pubkey to deployment keys in this repo on github
 - clone this repo
 - run ```install.sh```
     - copies ```ton-access``` folder to ```/home/ubuntu```
