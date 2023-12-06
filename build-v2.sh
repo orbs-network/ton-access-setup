@@ -22,7 +22,7 @@ function build() {
     export TON_BRANCH="$branch"
 
     # Run docker compose build
-    docker compose build
+    docker compose build --no-cache
     # Check if build failed
     [ ! $? -eq 0 ] && echo "Unable to build tag: $tag and branch: $branch!" && exit 1;
 }
