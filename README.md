@@ -19,8 +19,6 @@ config of yaml, nginx and env for all nodes.
 - run ```install.sh```
     - copies ```ton-access``` folder to ```/home/ubuntu```
 - ```cd /home/ubuntu/cd ton-access```
-- ```./get-global-config.sh```
-- ```sudo docker compose up -d```
 
 ## ton-access folder 
 - docker-compose.yaml
@@ -33,3 +31,7 @@ config of yaml, nginx and env for all nodes.
 - config/
     - ```testnet.json```
     - ```mainnet.json```
+
+
+## tests
+    - ```curl http://localhost/mngr/nodes```
