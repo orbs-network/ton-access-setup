@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Clone the Git repository
-git clone https://github.com/toncenter/ton-http-api
+#git clone https://github.com/toncenter/ton-http-api
+git clone https://github.com/orbsnetwork/ton-http-api
 cd ton-http-api
 
 # copy .env for building
