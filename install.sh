@@ -83,8 +83,7 @@ curl -sL https://ton-blockchain.github.io/testnet-global.config.json > $CONFIG_D
 echo "Done"
 
 echo -n "[3/10] Generating local configuration file... "
-python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null
-[ $? -gt 0 ] && eecho "Failed! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue." || echo "Done"
+(sudo -u ubuntu -- python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null || eecho "Failed! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue.") && echo "Done"
 
 echo -n "[4/11] Configuring fastly keys... "
 read -p "Enter FASTLY_SERVICE_ID: " FASTLY_SERVICE_ID ; [ -z $FASTLY_SERVICE_ID ] && eecho "FASTLY_SERVICE_ID can't be empty!"
