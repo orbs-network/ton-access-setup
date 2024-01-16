@@ -122,7 +122,7 @@ echo "Done"
 echo -n "[8/11] Executing \"docker compose up -d\" in $HOME_TON_ACCESS_DIR as root... "
 cd "$HOME_TON_ACCESS_DIR" || eecho "Unable to change directory to HOME_TON_ACCESS_DIR"
 sudo docker compose -f docker-compose.yaml up -d 
-if sudo docker compose -f docker-compose.yaml up -d; then eecho "Failed to run docker compose up."; fi
+if ! sudo docker compose -f docker-compose.yaml up -d; then eecho "Failed to run docker compose up."; fi
 cd - || eecho "Unable to return to previous directory $OLD_PWD"
 echo "Done"
   	
