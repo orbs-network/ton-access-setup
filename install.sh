@@ -87,12 +87,9 @@ echo "Done"
 echo -n "[3/10] Generating local configuration file... "
 (sudo -u ubuntu -- python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null || eecho "Failed! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue.") && echo "Done"
 
-echo -n "[4/11] Configuring fastly keys... "
-echo ""
+echo "[4/11] Configuring fastly keys... "
 read -p "Enter FASTLY_SERVICE_ID: " FASTLY_SERVICE_ID ; [ -z $FASTLY_SERVICE_ID ] && eecho "FASTLY_SERVICE_ID can't be empty!"
-echo ""
 read -p "Enter FASTLY_API_KEY: " FASTLY_API_KEY; [ -z $FASTLY_API_KEY ] && eecho "FASTLY_API_KEY can'y be empty!"
-echo ""
 sed -e 's/FASTLY_SERVICE_ID=xxx/FASTLY_SERVICE_ID='"$FASTLY_SERVICE_ID"'/' -e 's/FASTLY_API_KEY=xxx/FASTLY_API_KEY='"$FASTLY_API_KEY"'/' $PROJECT_TON_ACCESS_DIR/fastly.env 
 
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
