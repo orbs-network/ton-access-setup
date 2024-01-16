@@ -52,6 +52,8 @@ function build() {
 # Checks
 [[ ! $(id -u) -eq 0 ]] && eecho "Execute this script with sudo: \"sudo ./$SCRIPT_NAME\".";
 [[ $HOME_DIR =~ \~ ]] && eecho "Unable to find home directory for \"$USER\"."
+# Make a user enter sudo password now.
+sudo ls /var/run/sudo/ts &>/dev/null
 for APP in ${DEPENDENCY_APPS[@]}
 do
         command -v $APP > /dev/null 2>&1
@@ -86,8 +88,11 @@ echo -n "[3/10] Generating local configuration file... "
 (sudo -u ubuntu -- python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null || eecho "Failed! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue.") && echo "Done"
 
 echo -n "[4/11] Configuring fastly keys... "
+echo ""
 read -p "Enter FASTLY_SERVICE_ID: " FASTLY_SERVICE_ID ; [ -z $FASTLY_SERVICE_ID ] && eecho "FASTLY_SERVICE_ID can't be empty!"
+echo ""
 read -p "Enter FASTLY_API_KEY: " FASTLY_API_KEY; [ -z $FASTLY_API_KEY ] && eecho "FASTLY_API_KEY can'y be empty!"
+echo ""
 sed -e 's/FASTLY_SERVICE_ID=xxx/FASTLY_SERVICE_ID='"$FASTLY_SERVICE_ID"'/' -e 's/FASTLY_API_KEY=xxx/FASTLY_API_KEY='"$FASTLY_API_KEY"'/' $PROJECT_TON_ACCESS_DIR/fastly.env 
 
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
