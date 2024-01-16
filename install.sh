@@ -103,7 +103,7 @@ echo -n "[6/11] Copying \"$GENERATED_LOCAL_CONF\" in $HOME_TON_ACCESS_DIR/config
 [ ! -f "$HOME_TON_ACCESS_DIR/config/local.config.json" ] && eecho "Failed! Unable to find $HOME_TON_ACCESS_DIR/config/local.config.json"
 echo "Done"
 
-echo -n "[7/11] Build v2 local docker images testnet and mainnet... "
+echo "[7/11] Build v2 local docker images testnet and mainnet... "
 [ -d "$TON_HTTP_API_DIR" ] && rm -r $TON_HTTP_API_DIR
 git clone https://github.com/orbs-network/ton-http-api && THA="$(basename "$_" .git)"
 cd "$THA" || eecho "Unable to clone TON HTTP API project from GitHub or variable THA is empty!";
