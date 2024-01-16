@@ -91,6 +91,7 @@ echo "[4/11] Configuring fastly keys... "
 read -p "Enter FASTLY_SERVICE_ID: " FASTLY_SERVICE_ID ; [ -z $FASTLY_SERVICE_ID ] && eecho "FASTLY_SERVICE_ID can't be empty!"
 read -p "Enter FASTLY_API_KEY: " FASTLY_API_KEY; [ -z $FASTLY_API_KEY ] && eecho "FASTLY_API_KEY can'y be empty!"
 sed -e 's/FASTLY_SERVICE_ID=xxx/FASTLY_SERVICE_ID='"$FASTLY_SERVICE_ID"'/' -e 's/FASTLY_API_KEY=xxx/FASTLY_API_KEY='"$FASTLY_API_KEY"'/' $PROJECT_TON_ACCESS_DIR/fastly.env 
+echo ""
 
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
 [ -d $HOME_TON_ACCESS_DIR ] && rm -rf $HOME_TON_ACCESS_DIR
