@@ -13,7 +13,7 @@ GENERATED_LOCAL_CONF="/usr/bin/ton/local.config.json"
 UPDATER_SCRIPT_NAME="ton_access_setup_updater"
 UPDATER_SCRIPT="$BIN_DIR/$UPDATER_SCRIPT_NAME.sh"
 UPDATER_SERVICE="$UPDATER_SCRIPT_NAME.service"
-API_ENDPOINT=""
+GH_RELEASES_API_ENDPOINT=""
 GH_TOKEN=""
 # Notifications
 SLACK_URL=""
@@ -142,7 +142,7 @@ GENERATED_LOCAL_CONF="$GENERATED_LOCAL_CONF"
 LOG_FILE="$HOME_DIR/$(basename "$PROJECT_DIRECTORY").log"
 SLACK_URL="$SLACK_URL"
 RELEASED_TAG="$RELEASED_TAG"
-API_ENDPOINT="$API_ENDPOINT"
+GH_RELEASES_API_ENDPOINT="$GH_RELEASES_API_ENDPOINT"
 GH_TOKEN="$GH_TOKEN"
 TELEGRAM_GROUP_ID="$TELEGRAM_GROUP_ID"
 TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN"
@@ -153,7 +153,8 @@ cat <<'ENDSCRIPT2' >> $UPDATER_SCRIPT
 # Error echo
 function eecho() {
     printf "%s\n" "$@" 1>&2 >$LOG_FILE
-    return 1;
+	send_slack "$@"
+	exit 1;
 }
 
 # Informational echo
@@ -178,10 +179,10 @@ function send_telegram () {
 # Check if new tag has been released
 function check() {
     cd $PROJECT_DIRECTORY
-    [ -z "$API_ENDPOINT" ] && eecho "Variable API_ENDPOINT is empty!";
+    [ -z "$GH_RELEASES_API_ENDPOINT" ] && eecho "Variable GH_RELEASES_API_ENDPOINT is empty!";
     [ -z "$GH_TOKEN" ] && eecho "Variable GH_TOKEN is empty!";
     # Get info from latest release
-	RELEASE="$(curl -s -H "Authorization: Bearer $GH_TOKEN" "$API_ENDPOINT" | jq -r '"\(.name)~!~\(.tag_name)~!~\(.published_at)~!~\(.body)~!~\(.label)~!~\(.author.login)~!~\(.html_url)"')"; [ -z "$RELEASE" ] && eecho "Variable RELEASE is empty!";
+	RELEASE="$(curl -s -H "Authorization: Bearer $GH_TOKEN" "$GH_RELEASES_API_ENDPOINT" | jq -r '"\(.name)~!~\(.tag_name)~!~\(.published_at)~!~\(.body)~!~\(.label)~!~\(.author.login)~!~\(.html_url)"')"; [ -z "$RELEASE" ] && eecho "Variable RELEASE is empty!";
 	RELEASE_NAME="$(echo $RELEASE | awk -F '~!~' '{print $1}')"; [ -z "$RELEASE_NAME" ] && eecho "Variable RELEASE_NAME is empty!";
 	RELEASE_TAG="$(echo $RELEASE | awk -F '~!~' '{print $2}')"; [ -z "$RELEASE_TAG" ] && eecho "Variable RELEASE_TAG is empty!";
 	RELEASE_TIME="$(echo $RELEASE | awk -F '~!~' '{print $3}')"; [ -z "$RELEASE_TIME" ] && eecho "Variable RELEASE_TIME is empty!";
@@ -253,7 +254,6 @@ function check() {
 while true;
 do
         check
-        [ $? -gt 0 ] && send_slack "Check returned status code > 0."
         sleep 10s
 done
 ENDSCRIPT2
