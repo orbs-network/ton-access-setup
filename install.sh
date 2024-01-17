@@ -9,7 +9,7 @@ declare -a DEPENDENCY_APPS=("git python3 curl crontab docker mytonctrl jq gh")
 SCRIPT_NAME=$(basename $0)
 PROJECT_DIRECTORY="$(dirname "$(realpath $SCRIPT_NAME)")"
 PROJECT_TON_ACCESS_DIR="$PROJECT_DIRECTORY/ton-access"
-GENERATED_LOCAL_CONF="/usr/bin/ton/local.config.json"
+GENERATED_LOCAL_CONF="$(awk -F '"' '/defaultLocalConfigPath/ {print $2}' /usr/src/mytonctrl/mytoninstaller.py)"
 UPDATER_SCRIPT_NAME="ton_access_setup_updater"
 UPDATER_SCRIPT="$BIN_DIR/$UPDATER_SCRIPT_NAME.sh"
 UPDATER_SERVICE="$UPDATER_SCRIPT_NAME.service"
@@ -50,8 +50,6 @@ function build() {
 # Checks
 [[ ! $(id -u) -eq 0 ]] && eecho "Execute this script with sudo: \"sudo ./$SCRIPT_NAME\".";
 [[ $HOME_DIR =~ \~ ]] && eecho "Unable to find home directory for \"$USER\"."
-# Make a user enter sudo password now.
-sudo ls /var/run/sudo/ts &>/dev/null
 for APP in ${DEPENDENCY_APPS[@]}
 do
         command -v $APP > /dev/null 2>&1
@@ -68,14 +66,14 @@ done
 [ -z "$(find $PROJECT_DIRECTORY -type d -name ".git")" ] && eecho "Can't find .git dir inside of $PROJECT_DIRECTORY dir. Execute this script inside of Git project for git commands to work."
 REPO_NAME="$(basename $PROJECT_DIRECTORY)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository! Check command basename of repositry directory (PROJECT_DIRECTORY: $PROJECT_DIRECTORY)."
 [ -d $BIN_DIR ] || mkdir $BIN_DIR
-chown $USER:$USER $BIN_DIR
+chown -R $USER:$USER $BIN_DIR
 RELEASED_TAG="$(git describe --tags)" # Get current tag of repository
 
 ### Base installation
 echo -n "[1/10] Creating config directory... "
 [ -d "$PROJECT_TON_ACCESS_DIR" ] || eecho "$PROJECT_TON_ACCESS_DIR doesn't exist! This folder is mandatory to exist. Check repository."
 CONFIG_DIR="$PROJECT_TON_ACCESS_DIR/config"
-rm -r $CONFIG_DIR 
+rm -r $CONFIG_DIR &>/dev/null
 mkdir $CONFIG_DIR
 [ ! -d "$CONFIG_DIR" ] && eecho "Failed!" || echo "Done"
 
@@ -84,7 +82,7 @@ curl -sL https://ton-blockchain.github.io/global.config.json > $CONFIG_DIR/globa
 curl -sL https://ton-blockchain.github.io/testnet-global.config.json > $CONFIG_DIR/global-testnet.json; [ $? -gt 0 ] && eecho "Error occurred while trying to download global-testnet.json file! Check URL \"https://ton-blockchain.github.io/testnet-global.config.json\"";
 echo "Done"
 
-echo -n "[3/10] Generating local configuration file... "
+echo "[3/10] Generating local configuration file... "
 (sudo -u ubuntu -- python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null || eecho "Failed! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue.") && echo "Done"
 
 echo "[4/11] Configuring fastly keys... "
@@ -96,7 +94,7 @@ echo ""
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
 [ -d $HOME_TON_ACCESS_DIR ] && rm -rf $HOME_TON_ACCESS_DIR
 cp -r "$PROJECT_TON_ACCESS_DIR" $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed! Check ton-access location in git project. (PROJECT_TON_ACCESS_DIR: $PROJECT_TON_ACCESS_DIR)";
-chown $USER:$USER $HOME_TON_ACCESS_DIR
+chown -R $USER:$USER $HOME_TON_ACCESS_DIR
 echo "Done"
 
 echo -n "[6/11] Copying \"$GENERATED_LOCAL_CONF\" in $HOME_TON_ACCESS_DIR/config/ ... "
@@ -173,7 +171,7 @@ function send_slack () {
 function send_telegram () {
 	([ -z "$TELEGRAM_GROUP_ID" ] || [ -z "$TELEGRAM_BOT_TOKEN" ]) && eecho "Unable to send telegram because requred variables TELEGRAM_GROUP_ID and TELEGRAM_BOT_TOKEN are not present!"
     FORMATED_MESSAGE=$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )
-    curl -s --data "text=$FORMATED_MESSAGE" --data "chat_id=$GROUP_ID" 'https://api.telegram.org/bot'$BOT_TOKEN'/sendMessage' > /dev/null
+    curl -s --data "text=$FORMATED_MESSAGE" --data "chat_id=$TELEGRAM_GROUP_ID" 'https://api.telegram.org/bot'$BOT_TOKEN'/sendMessage' > /dev/null
 }
 
 # Check if new tag has been released
@@ -186,7 +184,7 @@ function check() {
 	RELEASE_NAME="$(echo $RELEASE | awk -F '~!~' '{print $1}')"; [ -z "$RELEASE_NAME" ] && eecho "Variable RELEASE_NAME is empty!";
 	RELEASE_TAG="$(echo $RELEASE | awk -F '~!~' '{print $2}')"; [ -z "$RELEASE_TAG" ] && eecho "Variable RELEASE_TAG is empty!";
 	RELEASE_TIME="$(echo $RELEASE | awk -F '~!~' '{print $3}')"; [ -z "$RELEASE_TIME" ] && eecho "Variable RELEASE_TIME is empty!";
-	RELEASE_BODY="$(echo $RELEASE | awk -F '~!~' '{print $4}')"; [ -z "$RELEASE_BODY" ] && eecho "Variable RELEASE_BODY is empty!";
+	RELEASE_BODY="$(echo $RELEASE | awk -F '~!~' '{print $4}')"; [ -z "$RELEASE_BODY" ] && echo "Variable RELEASE_BODY is empty!";
 	RELEASE_LABEL="$(echo $RELEASE | awk -F '~!~' '{print $5}')"; [ -z "$RELEASE_LABEL" ] && eecho "Variable RELEASE_LABEL is empty!";
 	RELEASE_USER="$(echo $RELEASE | awk -F '~!~' '{print $6}')"; [ -z "$RELEASE_USER" ] && eecho "Variable RELEASE_USER is empty!";
 	RELEASE_URL="$(echo $RELEASE | awk -F '~!~' '{print $7}')"; [ -z "$RELEASE_URL" ] && eecho "Variable RELEASE_URL is empty!";
@@ -194,60 +192,28 @@ function check() {
 	# Check if we are at the latest release
 	[[ "$RELEASED_TAG" == "$RELEASE_TAG" ]] && return 0;
 	RELEASED_TAG="$RELEASE_TAG"
-	send_slack "New release detected. Release \"$RELEASE_NAME\"($RELEASE_TAG) have been released on $RELEASE_TIME by $RELEASE_USER. URL: $RELEASE_URL"
-	send_telegram "New release detected. Release \"$RELEASE_NAME\"($RELEASE_TAG) have been released on $RELEASE_TIME by $RELEASE_USER. URL: $RELEASE_URL"
+	send_slack "Latest release has been changed. Release \"$RELEASE_NAME\"($RELEASE_TAG) have been released on $RELEASE_TIME by $RELEASE_USER. URL: $RELEASE_URL"
+	send_telegram "Latest release has been changed. Release \"$RELEASE_NAME\"($RELEASE_TAG) have been released on $RELEASE_TIME by $RELEASE_USER. URL: $RELEASE_URL"
 	# Sync with repository
 	git pull --tags -r origin $RELEASE_TAG 1>/dev/null 2>$LOG_FILE || send_slack "Unable to pull from origin using tag $RELEASE_TAG. Check log at $LOG_FILE for more info."
 	git checkout -f $RELEASE_TAG 1>/dev/null 2>$LOG_FILE || send_slack "Unable to checkout to tag $RELEASE_TAG. Check log at $LOG_FILE for more info."
 
 	# Check commit hash
     if [[ "$(git rev-list -n 1 tags/$RELEASE_TAG)" != "$(git rev-parse HEAD)" ]]; then
-     	send_slack "Local and remote commit hashes are the same. Check commits on Github."
-       	return 1
+     	eecho "Local and remote commit hashes are the same. Check commits on Github."
     fi
 
 	STATUS=$(git status --porcelain)
     if [ ! -z "$STATUS" ]; then
-       	send_slack "git status: $STATUS!"
-      	return 1
+       	eecho "git status: $STATUS!"
     fi
 
-	iecho -n "[1/7] Creating config directory... "
-	[ -d "$PROJECT_TON_ACCESS_DIR" ] || (send_slack "$PROJECT_TON_ACCESS_DIR doesn't exist." ; return 1)
-	CONFIG_DIR="$PROJECT_TON_ACCESS_DIR/config"
-	mkdir -p $CONFIG_DIR 2>$LOG_FILE
-	[ -d "$CONFIG_DIR" ] && iecho "Done" || (send_slack "Unable to create config directory inside of $PROJECT_TON_ACCESS_DIR directory!" ; return 1)
+### BEGIN. Define steps to do after new release/tag
 
-	iecho -n "[2/7] Downloading global-mainnet.json and global-testnet.json... "
-	curl -sL https://ton-blockchain.github.io/global.config.json > $CONFIG_DIR/global-mainnet.json 2>$LOG_FILE; [ ! -f $CONFIG_DIR/global-mainnet.json ] && (send_slack "Failed to download global-mainnet.json file!" ; return 1)
-	curl -sL https://ton-blockchain.github.io/testnet-global.config.json > $CONFIG_DIR/global-testnet.json 2>$LOG_FILE; [ ! -f $CONFIG_DIR/global-testnet.json ] && (send_slack "Failed to download global-testnet.json file!"; return 1)
+	iecho -n "[1/1] Step 1... "
 	iecho "Done"
 
-	iecho "[3/7] Generating local configuration file... "
-	python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf 1>/dev/null 2>$LOG_FILE
-	[[ $(find $GENERATED_LOCAL_CONF -mmin -1) ]] || (send_slack "Generated local config file is not updated! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue."; return 1)
-	iecho "Done"
-
-	iecho -n "[4/7] Copying ton-access to $HOME_DIR... "
-	[ -d "$HOME_TON_ACCESS_DIR" ] && rm -rf "$HOME_TON_ACCESS_DIR" 2>$LOG_FILE
-	cp -r "$PROJECT_TON_ACCESS_DIR" "$HOME_DIR" 2>$LOG_FILE
-	[ -d "$HOME_TON_ACCESS_DIR" ] || (send_slack "Copy failed from $PROJECT_TON_ACCESS_DIR to $HOME_DIR!"; return 1)
-	iecho "Done"
-
-	iecho -n "[5/7] Copying \"$GENERATED_LOCAL_CONF\" in $HOME_TON_ACCESS_DIR/config/ ... "
-	cp $GENERATED_LOCAL_CONF $HOME_TON_ACCESS_DIR/config/
-	iecho "Done"
-
-	iecho -n "[6/7] Build v2 local docker images testnet and mainnet... "
-	[ -d "$TON_HTTP_API_DIR" ] && rm -r $TON_HTTP_API_DIR
-	source $PROJECT_DIRECTORY/build-v2.sh 2>$LOG_FILE
-	iecho "Done"
-
-	iecho -n "[7/7] Executing \"docker compose up -d\" in $HOME_TON_ACCESS_DIR as root... "
-	cd $HOME_TON_ACCESS_DIR && sudo docker compose up -d 2>$LOG_FILE
-	[ $? -gt 0 ] && (send_slack "Failed to run docker compose up."; return 1)
-	cd -
-	iecho "Done"
+### END
 }
 
 ### Main
@@ -260,7 +226,7 @@ ENDSCRIPT2
 [ ! -s $UPDATER_SCRIPT ] && eecho "Script $UPDATER_SCRIPT not generated. Check if file exist and have content. You can find updater script in install.sh script inside \"### Generate updater script\" section."
 echo "Done"
 chmod 700 $UPDATER_SCRIPT || eecho "Failed to change permissions for file $UPDATER_SCRIPT"
-chown $USER:$USER $UPDATER_SCRIPT || eecho "Failed to change owner of file $UPDATER_SCRIPT"
+chown -R $USER:$USER $UPDATER_SCRIPT || eecho "Failed to change owner of file $UPDATER_SCRIPT"
 
 ### Generate updater service
 echo -n "[10/11] Generating service job for updater script... "
