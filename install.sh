@@ -4,7 +4,7 @@ USER="ubuntu"
 HOME_DIR="$(eval echo ~$USER)"
 BIN_DIR="$HOME_DIR/bin"
 HOME_TON_ACCESS_DIR="$HOME_DIR/ton-access"
-TON_HTTP_API_DIR="$HOME_DIR/ton-http-api"
+TON_HTTP_API_DIR="ton-http-api"
 declare -a DEPENDENCY_APPS=("git python3 curl crontab docker mytonctrl jq gh")
 SCRIPT_NAME=$(basename $0)
 PROJECT_DIRECTORY="$(dirname "$(realpath $SCRIPT_NAME)")"
@@ -44,8 +44,6 @@ function build() {
     export TON_BRANCH="$BRANCH"
 
     # Run docker compose build
-    docker compose build --no-cache
-    # Check if build failed
     if ! docker compose build --no-cache; then eecho "Unable to build tag: $TAG and branch: $BRANCH!"; fi
 }
 
@@ -70,12 +68,14 @@ done
 [ -z "$(find $PROJECT_DIRECTORY -type d -name ".git")" ] && eecho "Can't find .git dir inside of $PROJECT_DIRECTORY dir. Execute this script inside of Git project for git commands to work."
 REPO_NAME="$(basename $PROJECT_DIRECTORY)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository! Check command basename of repositry directory (PROJECT_DIRECTORY: $PROJECT_DIRECTORY)."
 [ -d $BIN_DIR ] || mkdir $BIN_DIR
+chown $USER:$USER $BIN_DIR
 RELEASED_TAG="$(git describe --tags)" # Get current tag of repository
 
 ### Base installation
 echo -n "[1/10] Creating config directory... "
-[ -d "$PROJECT_TON_ACCESS_DIR" ] || eecho "$PROJECT_TON_ACCESS_DIR doesn't exist."
+[ -d "$PROJECT_TON_ACCESS_DIR" ] || eecho "$PROJECT_TON_ACCESS_DIR doesn't exist! This folder is mandatory to exist. Check repository."
 CONFIG_DIR="$PROJECT_TON_ACCESS_DIR/config"
+rm -r $CONFIG_DIR 
 mkdir $CONFIG_DIR
 [ ! -d "$CONFIG_DIR" ] && eecho "Failed!" || echo "Done"
 
@@ -96,6 +96,7 @@ echo ""
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
 [ -d $HOME_TON_ACCESS_DIR ] && rm -rf $HOME_TON_ACCESS_DIR
 cp -r "$PROJECT_TON_ACCESS_DIR" $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed! Check ton-access location in git project. (PROJECT_TON_ACCESS_DIR: $PROJECT_TON_ACCESS_DIR)";
+chown $USER:$USER $HOME_TON_ACCESS_DIR
 echo "Done"
 
 echo -n "[6/11] Copying \"$GENERATED_LOCAL_CONF\" in $HOME_TON_ACCESS_DIR/config/ ... "
@@ -108,7 +109,7 @@ echo "[7/11] Build v2 local docker images testnet and mainnet... "
 git clone https://github.com/orbs-network/ton-http-api && THA="$(basename "$_" .git)"
 cd "$THA" || eecho "Unable to clone TON HTTP API project from GitHub or variable THA is empty!";
 cp ../build-v2.env ./.env
-git checkout v3
+git checkout v3 >/dev/null
 # build mainnet
 build "mainnet" "master"
 # build testnet
@@ -119,7 +120,6 @@ echo "Done"
 
 echo -n "[8/11] Executing \"docker compose up -d\" in $HOME_TON_ACCESS_DIR as root... "
 cd "$HOME_TON_ACCESS_DIR" || eecho "Unable to change directory to HOME_TON_ACCESS_DIR"
-sudo docker compose -f docker-compose.yaml up -d 
 if ! sudo docker compose -f docker-compose.yaml up -d; then eecho "Failed to run docker compose up."; fi
 cd - || eecho "Unable to return to previous directory $OLD_PWD"
 echo "Done"
@@ -259,8 +259,8 @@ done
 ENDSCRIPT2
 [ ! -s $UPDATER_SCRIPT ] && eecho "Script $UPDATER_SCRIPT not generated. Check if file exist and have content. You can find updater script in install.sh script inside \"### Generate updater script\" section."
 echo "Done"
-chmod 700 $UPDATER_SCRIPT
-chown $USER:$USER $UPDATER_SCRIPT
+chmod 700 $UPDATER_SCRIPT || eecho "Failed to change permissions for file $UPDATER_SCRIPT"
+chown $USER:$USER $UPDATER_SCRIPT || eecho "Failed to change owner of file $UPDATER_SCRIPT"
 
 ### Generate updater service
 echo -n "[10/11] Generating service job for updater script... "
@@ -295,4 +295,3 @@ systemctl start $UPDATER_SERVICE &>/dev/null
 systemctl enable $UPDATER_SERVICE &>/dev/null
 [ "$(systemctl is-active $UPDATER_SERVICE &>/dev/null; echo $?)" -gt 0 ] && eecho "$UPDATER_SERVICE not started! Check service with \"systemctl status $UPDATER_SERVICE\" ."
 echo "Done"
-chown -R $USER:$USER $BIN_DIR $HOME_TON_ACCESS_DIR
