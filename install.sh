@@ -49,7 +49,7 @@ function build() {
 
 # Checks
 [[ ! $(id -u) -eq 0 ]] && eecho "Execute this script with sudo: \"sudo ./$SCRIPT_NAME\".";
-[[ -d "$HOME_DIR" ]] && eecho "Unable to find home directory for \"$USER\"."
+[[ ! -d "$HOME_DIR" ]] && eecho "Unable to find home directory for \"$USER\"."
 for APP in ${DEPENDENCY_APPS[@]}
 do
         if ! command -v "$APP" &> /dev/null
