@@ -1,12 +1,12 @@
 #!/bin/bash 
 
 USER="ubuntu"
-HOME_DIR="$(eval echo ~$USER)"
+HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
 BIN_DIR="$HOME_DIR/bin"
 HOME_TON_ACCESS_DIR="$HOME_DIR/ton-access"
 TON_HTTP_API_DIR="ton-http-api"
 declare -a DEPENDENCY_APPS=("git python3 curl crontab docker mytonctrl jq gh")
-SCRIPT_NAME=$(basename $0)
+SCRIPT_NAME="${0##*/}"
 PROJECT_DIRECTORY="$(dirname "$(realpath $SCRIPT_NAME)")"
 PROJECT_TON_ACCESS_DIR="$PROJECT_DIRECTORY/ton-access"
 GENERATED_LOCAL_CONF="$(awk -F '"' '/defaultLocalConfigPath/ {print $2}' /usr/src/mytonctrl/mytoninstaller.py)"
@@ -22,14 +22,14 @@ TELEGRAM_BOT_TOKEN=""
 
 # Error echo
 function eecho() {
-	printf "%s\n" "$@" 1>&2
+	printf '\e\x1b[31m%s\n\x1b[0m' "$@" 1>&2
 	exit 1;
 }
 
 # Notifications to slack
 function send_slack () {
 	[ -z "$SLACK_URL" ] && echo "Unable to send slack because SLACK_URL variable is empty!" && return 1;
-	FORMATED_MESSAGE=$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )
+	FORMATED_MESSAGE="$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )"
 	curl -s -X POST "$SLACK_URL" -H 'Content-type: application/json' --data '{"text":"'"$(hostname): $FORMATED_MESSAGE"'"}' >/dev/null
 }
 
@@ -49,24 +49,22 @@ function build() {
 
 # Checks
 [[ ! $(id -u) -eq 0 ]] && eecho "Execute this script with sudo: \"sudo ./$SCRIPT_NAME\".";
-[[ $HOME_DIR =~ \~ ]] && eecho "Unable to find home directory for \"$USER\"."
+[[ -d "$HOME_DIR" ]] && eecho "Unable to find home directory for \"$USER\"."
 for APP in ${DEPENDENCY_APPS[@]}
 do
-        command -v $APP > /dev/null 2>&1
-        if [ ! $? -eq 0 ]
+        if ! command -v "$APP" &> /dev/null
         then
 			[[ "$APP" == "mytonctrl" ]] && APP="$APP (Download: install.sh and uninstall.sh scripts from https://github.com/ton-blockchain/mytonctrl/blob/master/scripts/)"
 			DEPENDENCIES+=$(echo -e "\n\t - $APP")
         fi
 done
-[ ! -z "$DEPENDENCIES" ] && echo "Install dependencies and execute this script again." && eecho "Dependencies:$DEPENDENCIES"
+([ -n "$DEPENDENCIES" ] && echo "Install dependencies and execute this script again.") && eecho "Dependencies:$DEPENDENCIES"
 [ "$(docker ps &>/dev/null; echo $?)" -gt 0 ] && eecho "User $USER is unable to execute docker commands! Add docker group to $USER."
 [ -z "$SCRIPT_NAME" ] && eecho "SCRIPT_NAME variable is empty. Check command \"basename \$0\""
 [ -z "$PROJECT_DIRECTORY" ] && eecho "Can't determine project directory! Check commands dirname and \"realpath $SCRIPT_NAME\"."
 [ -z "$(find $PROJECT_DIRECTORY -type d -name ".git")" ] && eecho "Can't find .git dir inside of $PROJECT_DIRECTORY dir. Execute this script inside of Git project for git commands to work."
 REPO_NAME="$(basename $PROJECT_DIRECTORY)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository! Check command basename of repositry directory (PROJECT_DIRECTORY: $PROJECT_DIRECTORY)."
-[ -d $BIN_DIR ] || mkdir $BIN_DIR
-chown -R $USER:$USER $BIN_DIR
+[ -d "$BIN_DIR" ] || mkdir $BIN_DIR
 RELEASED_TAG="$(git describe --tags)" # Get current tag of repository
 
 ### Base installation
@@ -78,27 +76,26 @@ mkdir $CONFIG_DIR
 [ ! -d "$CONFIG_DIR" ] && eecho "Failed!" || echo "Done"
 
 echo -n "[2/10] Downloading global-mainnet.json and global-testnet.json... "
-curl -sL https://ton-blockchain.github.io/global.config.json > $CONFIG_DIR/global-mainnet.json; [ $? -gt 0 ] && eecho "Error occurred while trying to download global-mainnet.json file! Check URL \"https://ton-blockchain.github.io/global.config.json\"";
-curl -sL https://ton-blockchain.github.io/testnet-global.config.json > $CONFIG_DIR/global-testnet.json; [ $? -gt 0 ] && eecho "Error occurred while trying to download global-testnet.json file! Check URL \"https://ton-blockchain.github.io/testnet-global.config.json\"";
+curl -sL "https://ton-blockchain.github.io/global.config.json" > $CONFIG_DIR/global-mainnet.json; [ -s "$CONFIG_DIR/global-mainnet.json" ] && eecho "Error occurred while trying to download global-mainnet.json file! Check URL \"https://ton-blockchain.github.io/global.config.json\"";
+curl -sL "https://ton-blockchain.github.io/testnet-global.config.json" > $CONFIG_DIR/global-testnet.json; [ -s "$CONFIG_DIR/global-testnet.json" ] && eecho "Error occurred while trying to download global-testnet.json file! Check URL \"https://ton-blockchain.github.io/testnet-global.config.json\"";
 echo "Done"
 
 echo "[3/10] Generating local configuration file... "
 (sudo -u ubuntu -- python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null || eecho "Failed! Try to execute \"python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf\" manually to inspect the issue.") && echo "Done"
 
 echo "[4/11] Configuring fastly keys... "
-read -p "Enter FASTLY_SERVICE_ID: " FASTLY_SERVICE_ID ; [ -z $FASTLY_SERVICE_ID ] && eecho "FASTLY_SERVICE_ID can't be empty!"
-read -p "Enter FASTLY_API_KEY: " FASTLY_API_KEY; [ -z $FASTLY_API_KEY ] && eecho "FASTLY_API_KEY can'y be empty!"
+read -p "Enter FASTLY_SERVICE_ID: " FASTLY_SERVICE_ID ; [ -z "$FASTLY_SERVICE_ID" ] && eecho "FASTLY_SERVICE_ID can't be empty!"
+read -p "Enter FASTLY_API_KEY: " FASTLY_API_KEY; [ -z "$FASTLY_API_KEY" ] && eecho "FASTLY_API_KEY can'y be empty!"
 sed -e 's/FASTLY_SERVICE_ID=xxx/FASTLY_SERVICE_ID='"$FASTLY_SERVICE_ID"'/' -e 's/FASTLY_API_KEY=xxx/FASTLY_API_KEY='"$FASTLY_API_KEY"'/' $PROJECT_TON_ACCESS_DIR/fastly.env 
 echo ""
 
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
-[ -d $HOME_TON_ACCESS_DIR ] && rm -rf $HOME_TON_ACCESS_DIR
-cp -r "$PROJECT_TON_ACCESS_DIR" $HOME_DIR ; [ $? -gt 0 ] && eecho "ton-access directory copy failed! Check ton-access location in git project. (PROJECT_TON_ACCESS_DIR: $PROJECT_TON_ACCESS_DIR)";
-chown -R $USER:$USER $HOME_TON_ACCESS_DIR
+[ -d "$HOME_TON_ACCESS_DIR" ] && rm -rf "$HOME_TON_ACCESS_DIR"
+cp -r "$PROJECT_TON_ACCESS_DIR" "$HOME_DIR" ; [ $? -gt 0 ] && eecho "ton-access directory copy failed! Check ton-access location in git project. (PROJECT_TON_ACCESS_DIR: $PROJECT_TON_ACCESS_DIR)";
 echo "Done"
 
 echo -n "[6/11] Copying \"$GENERATED_LOCAL_CONF\" in $HOME_TON_ACCESS_DIR/config/ ... "
-[ -f "$GENERATED_LOCAL_CONF" ] && cp $GENERATED_LOCAL_CONF $HOME_TON_ACCESS_DIR/config/ || eecho "File $GENERATED_LOCAL_CONF doesn't exist! Try to generate config file manually."
+[ -f "$GENERATED_LOCAL_CONF" ] && cp "$GENERATED_LOCAL_CONF" "$HOME_TON_ACCESS_DIR/config/" || eecho "File $GENERATED_LOCAL_CONF doesn't exist! Try to generate config file manually."
 [ ! -f "$HOME_TON_ACCESS_DIR/config/local.config.json" ] && eecho "Failed! Unable to find $HOME_TON_ACCESS_DIR/config/local.config.json"
 echo "Done"
 
@@ -107,7 +104,7 @@ echo "[7/11] Build v2 local docker images testnet and mainnet... "
 git clone https://github.com/orbs-network/ton-http-api && THA="$(basename "$_" .git)"
 cd "$THA" || eecho "Unable to clone TON HTTP API project from GitHub or variable THA is empty!";
 cp ../build-v2.env ./.env
-git checkout v3 >/dev/null
+git checkout v3
 # build mainnet
 build "mainnet" "master"
 # build testnet
@@ -126,8 +123,8 @@ rm -r "$CONFIG_DIR"
 
 ### Generate updater script
 echo -n "[9/11] Generating updater script to $UPDATER_SCRIPT... "
-[ -f $UPDATER_SCRIPT ] && rm $UPDATER_SCRIPT
-cat <<ENDSCRIPT1 > $UPDATER_SCRIPT
+[ -f "$UPDATER_SCRIPT" ] && rm "$UPDATER_SCRIPT"
+cat <<ENDSCRIPT1 > "$UPDATER_SCRIPT"
 #!/bin/bash
 HOME_DIR="$HOME_DIR"
 HOME_TON_ACCESS_DIR="$HOME_TON_ACCESS_DIR"
@@ -147,30 +144,30 @@ TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN"
 
 ENDSCRIPT1
 # Generate second half of the script
-cat <<'ENDSCRIPT2' >> $UPDATER_SCRIPT
+cat <<'ENDSCRIPT2' >> "$UPDATER_SCRIPT"
 # Error echo
 function eecho() {
-    printf "%s\n" "$@" 1>&2 >$LOG_FILE
+    printf "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: %s\n" "$@" 1>&2 >$LOG_FILE
 	send_slack "$@"
 	exit 1;
 }
 
 # Informational echo
 function iecho() {
-    printf "%s\n" "$@" >$LOG_FILE
+    printf "$(date '+%Y-%m-%d %H:%M:%S') - INFO: %s\n" "$@" >$LOG_FILE
 }
 
 # Notifications to slack
 function send_slack () {
     [ -z "$SLACK_URL" ] && eecho "Unable to send slack because SLACK_URL variable is empty!"
-    FORMATED_MESSAGE=$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )
+    FORMATED_MESSAGE="$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )"
     curl -s -X POST $SLACK_URL -H 'Content-type: application/json' --data '{"text":"'"$(hostname): $SCRIPT_NAME: $FORMATED_MESSAGE"'"}' >/dev/null
 }
 
 # Notificatios to telegram
 function send_telegram () {
 	([ -z "$TELEGRAM_GROUP_ID" ] || [ -z "$TELEGRAM_BOT_TOKEN" ]) && eecho "Unable to send telegram because requred variables TELEGRAM_GROUP_ID and TELEGRAM_BOT_TOKEN are not present!"
-    FORMATED_MESSAGE=$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )
+    FORMATED_MESSAGE="$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )"
     curl -s --data "text=$FORMATED_MESSAGE" --data "chat_id=$TELEGRAM_GROUP_ID" 'https://api.telegram.org/bot'$BOT_TOKEN'/sendMessage' > /dev/null
 }
 
@@ -226,14 +223,13 @@ ENDSCRIPT2
 [ ! -s $UPDATER_SCRIPT ] && eecho "Script $UPDATER_SCRIPT not generated. Check if file exist and have content. You can find updater script in install.sh script inside \"### Generate updater script\" section."
 echo "Done"
 chmod 700 $UPDATER_SCRIPT || eecho "Failed to change permissions for file $UPDATER_SCRIPT"
-chown -R $USER:$USER $UPDATER_SCRIPT || eecho "Failed to change owner of file $UPDATER_SCRIPT"
 
 ### Generate updater service
 echo -n "[10/11] Generating service job for updater script... "
-[ -f /etc/systemd/system/$UPDATER_SERVICE ] && rm /etc/systemd/system/$UPDATER_SERVICE
+[ -f "/etc/systemd/system/$UPDATER_SERVICE" ] && rm "/etc/systemd/system/$UPDATER_SERVICE"
 if [ -z "$(systemctl --all list-unit-files -t service | grep -w "$UPDATER_SERVICE")" ]
 then
-	cat > /etc/systemd/system/$UPDATER_SERVICE << ENDSERVICE
+	cat > "/etc/systemd/system/$UPDATER_SERVICE" << ENDSERVICE
 [Unit]
 Description=Updater script for Ton Access Setup 
 After=network.target
@@ -255,9 +251,15 @@ fi
 echo "Done"
 
 echo -n "[11/11] Enabling and restarting $UPDATER_SERVICE... "
-systemctl stop $UPDATER_SERVICE &>/dev/null
+systemctl stop "$UPDATER_SERVICE" &>/dev/null
 systemctl daemon-reload 
-systemctl start $UPDATER_SERVICE &>/dev/null
-systemctl enable $UPDATER_SERVICE &>/dev/null
-[ "$(systemctl is-active $UPDATER_SERVICE &>/dev/null; echo $?)" -gt 0 ] && eecho "$UPDATER_SERVICE not started! Check service with \"systemctl status $UPDATER_SERVICE\" ."
+systemctl start "$UPDATER_SERVICE" &>/dev/null
+systemctl enable "$UPDATER_SERVICE" &>/dev/null
+[ "$(systemctl is-active "$UPDATER_SERVICE" &>/dev/null; echo $?)" -gt 0 ] && eecho "$UPDATER_SERVICE not started! Check service with \"systemctl status $UPDATER_SERVICE\" ."
+echo "Done"
+
+echo -n "[12/12] Setup permissions for local ton-access-setup folders"
+chown -R $USER:$USER "$UPDATER_SCRIPT" || eecho "Failed to change owner of file $UPDATER_SCRIPT"
+chown -R $USER:$USER "$BIN_DIR" || eecho "Failed to change owner of file $BIN_DIR"
+chown -R $USER:$USER "$HOME_TON_ACCESS_DIR" || eecho "Failed to change owner of file $HOME_TON_ACCESS_DIR"
 echo "Done"
