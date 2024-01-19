@@ -76,8 +76,8 @@ mkdir $CONFIG_DIR
 [ ! -d "$CONFIG_DIR" ] && eecho "Failed!" || echo "Done"
 
 echo -n "[2/10] Downloading global-mainnet.json and global-testnet.json... "
-curl -sL "https://ton-blockchain.github.io/global.config.json" > $CONFIG_DIR/global-mainnet.json; [ -s "$CONFIG_DIR/global-mainnet.json" ] && eecho "Error occurred while trying to download global-mainnet.json file! Check URL \"https://ton-blockchain.github.io/global.config.json\"";
-curl -sL "https://ton-blockchain.github.io/testnet-global.config.json" > $CONFIG_DIR/global-testnet.json; [ -s "$CONFIG_DIR/global-testnet.json" ] && eecho "Error occurred while trying to download global-testnet.json file! Check URL \"https://ton-blockchain.github.io/testnet-global.config.json\"";
+curl -sL "https://ton-blockchain.github.io/global.config.json" > $CONFIG_DIR/global-mainnet.json; [ ! -s "$CONFIG_DIR/global-mainnet.json" ] && eecho "Error occurred while trying to download global-mainnet.json file! Check URL \"https://ton-blockchain.github.io/global.config.json\"";
+curl -sL "https://ton-blockchain.github.io/testnet-global.config.json" > $CONFIG_DIR/global-testnet.json; [ ! -s "$CONFIG_DIR/global-testnet.json" ] && eecho "Error occurred while trying to download global-testnet.json file! Check URL \"https://ton-blockchain.github.io/testnet-global.config.json\"";
 echo "Done"
 
 echo "[3/10] Generating local configuration file... "
