@@ -206,7 +206,7 @@ function check() {
 
 	STATUS=$(git status --porcelain)
     if [ ! -z "$STATUS" ]; then
-       	eecho "git status: $STATUS!"
+       	eecho "git status: $STATUS! Execute command git status --porcelain inside of $PROJECT_DIRECTORY directory to inspect the error."
     fi
 
 ### BEGIN. Define steps to do after new release/tag
