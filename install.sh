@@ -67,6 +67,7 @@ TELEGRAM_BOT_TOKEN="$(jq -r '.TELEGRAM_BOT_TOKEN' $CONFIG_FILE)"
 [ -z "$(find $PROJECT_DIRECTORY -type d -name ".git")" ] && eecho "Can't find .git dir inside of $PROJECT_DIRECTORY dir. Execute this script inside of Git project for git commands to work."
 REPO_NAME="$(basename $PROJECT_DIRECTORY)"; [ -z "$REPO_NAME" ] && eecho "Unable to get name of repository! Check command basename of repositry directory (PROJECT_DIRECTORY: $PROJECT_DIRECTORY)."
 [ -d "$BIN_DIR" ] || mkdir $BIN_DIR
+chown -R $USER:$USER "$BIN_DIR" || eecho "Failed to change owner of file $BIN_DIR"
 RELEASED_TAG="$(git describe --tags)" # Get current tag of repository
 
 ### Base installation
@@ -94,6 +95,7 @@ echo ""
 echo -n "[5/11] Copying ton-access to $HOME_DIR... "
 [ -d "$HOME_TON_ACCESS_DIR" ] && rm -rf "$HOME_TON_ACCESS_DIR"
 cp -r "$PROJECT_TON_ACCESS_DIR" "$HOME_DIR" ; [ $? -gt 0 ] && eecho "ton-access directory copy failed! Check ton-access location in git project. (PROJECT_TON_ACCESS_DIR: $PROJECT_TON_ACCESS_DIR)";
+chown -R $USER:$USER "$HOME_TON_ACCESS_DIR" || eecho "Failed to change owner of file $HOME_TON_ACCESS_DIR"
 echo "Done"
 
 echo -n "[6/11] Copying \"$GENERATED_LOCAL_CONF\" in $HOME_TON_ACCESS_DIR/config/ ... "
@@ -226,6 +228,7 @@ ENDSCRIPT2
 [ ! -s $UPDATER_SCRIPT ] && eecho "Script $UPDATER_SCRIPT not generated. Check if file exist and have content. You can find updater script in install.sh script inside \"### Generate updater script\" section."
 echo "Done"
 chmod 700 $UPDATER_SCRIPT || eecho "Failed to change permissions for file $UPDATER_SCRIPT"
+chown -R $USER:$USER "$UPDATER_SCRIPT" || eecho "Failed to change owner of file $UPDATER_SCRIPT"
 
 ### Generate updater service
 echo -n "[10/11] Generating service job for updater script... "
@@ -259,10 +262,4 @@ systemctl daemon-reload
 systemctl start "$UPDATER_SERVICE" &>/dev/null
 systemctl enable "$UPDATER_SERVICE" &>/dev/null
 [ "$(systemctl is-active "$UPDATER_SERVICE" &>/dev/null; echo $?)" -gt 0 ] && eecho "$UPDATER_SERVICE not started! Check service with \"systemctl status $UPDATER_SERVICE\" ."
-echo "Done"
-
-echo -n "[12/12] Setup permissions for local ton-access-setup folders"
-chown -R $USER:$USER "$UPDATER_SCRIPT" || eecho "Failed to change owner of file $UPDATER_SCRIPT"
-chown -R $USER:$USER "$BIN_DIR" || eecho "Failed to change owner of file $BIN_DIR"
-chown -R $USER:$USER "$HOME_TON_ACCESS_DIR" || eecho "Failed to change owner of file $HOME_TON_ACCESS_DIR"
 echo "Done"
