@@ -1,0 +1,7 @@
+{
+    "GH_RELEASES_API_ENDPOINT": "https://api.github.com/repos/Enton-72/ton-access-setup/releases/latest",
+    "GH_TOKEN": "",
+    "SLACK_URL": "",
+    "TELEGRAM_GROUP_ID": "",
+    "TELEGRAM_BOT_TOKEN": ""
+  }
