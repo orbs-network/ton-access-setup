@@ -33,11 +33,9 @@ function build() {
     # Function parameters
     local TAG="$1"
     local BRANCH="$2"
-
     # Set the environment variable    
     export IMAGE_TAG="$TAG"
     export TON_BRANCH="$BRANCH"
-
     # Run docker compose build
     if ! docker compose build --no-cache; then eecho "Unable to build tag: $TAG and branch: $BRANCH!"; fi
 }
