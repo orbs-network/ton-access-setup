@@ -177,45 +177,40 @@ function send_telegram () {
 
 # Check if new tag has been released
 function check() {
-    cd $PROJECT_DIRECTORY
-    [ -z "$GH_RELEASES_API_ENDPOINT" ] && eecho "Variable GH_RELEASES_API_ENDPOINT is empty!";
-    [ -z "$GH_TOKEN" ] && eecho "Variable GH_TOKEN is empty!";
-    # Get info from latest release
-	RELEASE="$(curl -s -H "Authorization: Bearer $GH_TOKEN" "$GH_RELEASES_API_ENDPOINT" | jq -r '"\(.name)~!~\(.tag_name)~!~\(.published_at)~!~\(.body)~!~\(.label)~!~\(.author.login)~!~\(.html_url)"')"; [ -z "$RELEASE" ] && eecho "Variable RELEASE is empty!";
-	RELEASE_NAME="$(echo $RELEASE | awk -F '~!~' '{print $1}')"; [ -z "$RELEASE_NAME" ] && eecho "Variable RELEASE_NAME is empty!";
-	RELEASE_TAG="$(echo $RELEASE | awk -F '~!~' '{print $2}')"; [ -z "$RELEASE_TAG" ] && eecho "Variable RELEASE_TAG is empty!";
-	RELEASE_TIME="$(echo $RELEASE | awk -F '~!~' '{print $3}')"; [ -z "$RELEASE_TIME" ] && eecho "Variable RELEASE_TIME is empty!";
-	RELEASE_BODY="$(echo $RELEASE | awk -F '~!~' '{print $4}')"; [ -z "$RELEASE_BODY" ] && echo "Variable RELEASE_BODY is empty!";
-	RELEASE_LABEL="$(echo $RELEASE | awk -F '~!~' '{print $5}')"; [ -z "$RELEASE_LABEL" ] && eecho "Variable RELEASE_LABEL is empty!";
-	RELEASE_USER="$(echo $RELEASE | awk -F '~!~' '{print $6}')"; [ -z "$RELEASE_USER" ] && eecho "Variable RELEASE_USER is empty!";
-	RELEASE_URL="$(echo $RELEASE | awk -F '~!~' '{print $7}')"; [ -z "$RELEASE_URL" ] && eecho "Variable RELEASE_URL is empty!";
-
-	# Check if we are at the latest release
-	[[ "$RELEASED_TAG" == "$RELEASE_TAG" ]] && return 0;
-	RELEASED_TAG="$RELEASE_TAG"
-	send_slack "Latest release has been changed. Release \"$RELEASE_NAME\"($RELEASE_TAG) have been released on $RELEASE_TIME by $RELEASE_USER. URL: $RELEASE_URL"
-	send_telegram "Latest release has been changed. Release \"$RELEASE_NAME\"($RELEASE_TAG) have been released on $RELEASE_TIME by $RELEASE_USER. URL: $RELEASE_URL"
-	# Sync with repository
-	git pull --tags -r origin $RELEASE_TAG 1>/dev/null 2>$LOG_FILE || send_slack "Unable to pull from origin using tag $RELEASE_TAG. Check log at $LOG_FILE for more info."
-	git checkout -f $RELEASE_TAG 1>/dev/null 2>$LOG_FILE || send_slack "Unable to checkout to tag $RELEASE_TAG. Check log at $LOG_FILE for more info."
-
-	# Check commit hash
-    if [[ "$(git rev-list -n 1 tags/$RELEASE_TAG)" != "$(git rev-parse HEAD)" ]]; then
-     	eecho "Local and remote commit hashes are the same. Check commits on Github."
-    fi
-
-	STATUS=$(git status --porcelain)
-    if [ ! -z "$STATUS" ]; then
-       	eecho "git status: $STATUS! Execute command git status --porcelain inside of $PROJECT_DIRECTORY directory to inspect the error."
-    fi
-
-### BEGIN. Define steps to do after new release/tag
-
-	iecho -n "[1/1] Step 1... "
-		send_slack "Running step 1... Done"
-	iecho "Done"
-
-### END
+        cd $PROJECT_DIRECTORY
+		FETCH_TEST="$(git fetch -f --tags --dry-run 2>&1 | grep -o "\[.*\]" | sed -e 's/\[//' -e 's/\]//')"
+        [ -z "$FETCH_TEST" ] && return 0 || send_slack "Git fetch got: $FETCH_TEST"
+        git fetch -f --prune --prune-tags # Sync tags from remote
+        # Proverava commit hash
+        if [[ "$(git rev-list --tags --max-count=1)" == "$(git rev-parse HEAD)" ]]; then
+                send_slack "Local and remote commit hashes are the same. Check commits on Github."
+                return 1
+        fi
+        TAG="$(git describe --tags $(git rev-list --tags --max-count=1))" # Get latest tag
+        git switch -c $TAG
+        git checkout $TAG
+        PULL="$(git pull origin $TAG)"
+        if [[ $PULL =~ "Already up to date" ]]; then
+                send_slack "Nothing to pull from git! Check how tag is created."
+                return 1
+        fi
+        iecho "$(date) New tag released $TAG, starting with deploy..."
+        send_slack "New tag released $TAG, starting with deploy..."
+        git pull --tags 2>$LOG_FILE
+        STATUS=$(git status --porcelain)
+        if [ ! -z "$STATUS" ]; then
+                send_slack "git status: $STATUS!"
+                return 1
+        fi
+        # Proverava commit hash
+        if [[ "$(git rev-list --tags --max-count=1)" != "$(git rev-parse HEAD)" ]];then
+                send_slack "Local and remote commit hashes are not the same after git checkout and pull commands."
+                return 1
+        fi
+		### BEGIN. Define steps to do after new release/tag
+        iecho -n "[1/1] Just testing... "
+        iecho "Done"
+		### END
 }
 
 ### Main
