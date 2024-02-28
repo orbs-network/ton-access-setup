@@ -33,3 +33,5 @@ build "mainnet" "master"
 build "testnet" "testnet"
 cd -
 rm -rf ton-http-api/
+
+#IMAGE_TAG=mainnet TON_BRANCH=master docker compose build 
