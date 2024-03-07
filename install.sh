@@ -5,6 +5,7 @@ HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
 BIN_DIR="$HOME_DIR/bin"
 HOME_TON_ACCESS_DIR="$HOME_DIR/ton-access"
 TON_HTTP_API_DIR="ton-http-api"
+TON_HTTP_API_URL="https://github.com/toncenter/ton-http-api"
 declare -a DEPENDENCY_APPS=("git python3 curl crontab docker mytonctrl jq gh")
 SCRIPT_NAME="${0##*/}"
 PROJECT_DIRECTORY="$(dirname "$(realpath $SCRIPT_NAME)")"
@@ -103,7 +104,7 @@ echo "Done"
 
 echo "[7/11] Build v2 local docker images testnet and mainnet... "
 [ -d "$TON_HTTP_API_DIR" ] && rm -r $TON_HTTP_API_DIR
-git clone https://github.com/orbs-network/ton-http-api && THA="$(basename "$_" .git)"
+git clone "$TON_HTTP_API_URL" && THA="$(basename "$_" .git)"
 cd "$THA" || eecho "Unable to clone TON HTTP API project from GitHub or variable THA is empty!";
 cp ../build-v2.env ./.env
 git checkout v3
