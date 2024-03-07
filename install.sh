@@ -14,7 +14,7 @@ GENERATED_LOCAL_CONF="$(awk -F '\"' '/defaultLocalConfigPath/ {print $2}' /usr/s
 UPDATER_SCRIPT_NAME="ton_access_setup_updater"
 UPDATER_SCRIPT="$BIN_DIR/$UPDATER_SCRIPT_NAME.sh"
 UPDATER_SERVICE="$UPDATER_SCRIPT_NAME.service"
-CONFIG_FILE="./install_conf.json"
+#CONFIG_FILE="./install_conf.json"
 
 # Error echo
 function eecho() {
@@ -52,12 +52,12 @@ do
         fi
 done
 ([ -n "$DEPENDENCIES" ] && echo "Install dependencies and execute this script again.") && eecho "Dependencies:$DEPENDENCIES"
-[ -s $CONFIG_FILE ] || { echo "Unable to find config file for installation script! Check if you have install_conf.json file in $PROJECT_DIRECTORY" ; exit 1; }
-GH_RELEASES_API_ENDPOINT="$(jq -r '.GH_RELEASES_API_ENDPOINT' $CONFIG_FILE)"
-GH_TOKEN="$(jq -r '.GH_TOKEN' $CONFIG_FILE)"
-SLACK_URL="$(jq -r '.SLACK_URL' $CONFIG_FILE)"
-TELEGRAM_GROUP_ID="$(jq -r '.TELEGRAM_GROUP_ID' $CONFIG_FILE)"
-TELEGRAM_BOT_TOKEN="$(jq -r '.TELEGRAM_BOT_TOKEN' $CONFIG_FILE)"
+#[ -s $CONFIG_FILE ] || { echo "Unable to find config file for installation script! Check if you have install_conf.json file in $PROJECT_DIRECTORY" ; exit 1; }
+#GH_RELEASES_API_ENDPOINT="$(jq -r '.GH_RELEASES_API_ENDPOINT' $CONFIG_FILE)"
+#GH_TOKEN="$(jq -r '.GH_TOKEN' $CONFIG_FILE)"
+#SLACK_URL="$(jq -r '.SLACK_URL' $CONFIG_FILE)"
+#TELEGRAM_GROUP_ID="$(jq -r '.TELEGRAM_GROUP_ID' $CONFIG_FILE)"
+#TELEGRAM_BOT_TOKEN="$(jq -r '.TELEGRAM_BOT_TOKEN' $CONFIG_FILE)"
 { [ -z "$GH_RELEASES_API_ENDPOINT" ] || [ -z "$GH_TOKEN" ] || [ -z "$SLACK_URL" ] || [ -z "$TELEGRAM_GROUP_ID" ] || [ -z "$TELEGRAM_BOT_TOKEN" ]; } && eecho "One or more core variables are empty! Check install_conf.json file; all variables must have a value!"
 [[ ! -d "$HOME_DIR" ]] && eecho "Unable to find home directory for \"$USER\"."
 [ "$(docker ps &>/dev/null; echo $?)" -gt 0 ] && eecho "User $USER is unable to execute docker commands! Add docker group to $USER."
