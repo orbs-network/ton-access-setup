@@ -158,7 +158,7 @@ function eecho() {
 
 # Informational echo
 function iecho() {
-    printf "$(date '+%Y-%m-%d %H:%M:%S') - INFO: %s\n" "$@" >$LOG_FILE
+    printf "$(date '+%Y-%m-%d %H:%M:%S') - INFO: %s\n" "$@" >>$LOG_FILE
 }
 
 # Notifications to slack
