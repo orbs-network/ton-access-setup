@@ -151,7 +151,7 @@ ENDSCRIPT1
 cat <<'ENDSCRIPT2' >> "$UPDATER_SCRIPT"
 # Error echo
 function eecho() {
-    printf "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: %s\n" "$@" 1>&2 >$LOG_FILE
+    printf "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: %s\n" "$@" 1>&2 >>$LOG_FILE
 	send_slack "$@"
 	exit 1;
 }
