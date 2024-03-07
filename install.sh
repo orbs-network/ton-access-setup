@@ -42,7 +42,7 @@ function build() {
 }
 
 # Checks
-[[ ! $(id -u) -eq 0 ]] && eecho "Execute this script with sudo: \"sudo ./$SCRIPT_NAME\".";
+[[ ! $(id -u) -eq 0 ]] && eecho "Execute this script with sudo: \"sudo -E ./$SCRIPT_NAME\".";
 for APP in ${DEPENDENCY_APPS[@]}
 do
         if ! command -v "$APP" &> /dev/null
