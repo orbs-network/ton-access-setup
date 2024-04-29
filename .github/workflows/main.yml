@@ -1,5 +1,5 @@
 name: Trigger install.sh script on predefined servers
-on: push
+'on': push
 #  release:
 #    types:
 #      - published
@@ -10,6 +10,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: List my path
-        run: ./install.sh
-      - name: Show Output
-        run: 'echo ${{ steps.deploy.outputs.url }}'
+        run: ls -lah *; pwd; env
