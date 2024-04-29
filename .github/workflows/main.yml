@@ -1,8 +1,8 @@
 name: Trigger install.sh script on predefined servers
-'on':
-  release:
-    types:
-      - published
+on: push
+#  release:
+#    types:
+#      - published
 jobs:
   deploy:
     runs-on: access
