@@ -10,6 +10,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: List my path
-        run: pwd; ls -lah
+        run: ./install.sh
       - name: Show Output
         run: 'echo ${{ steps.deploy.outputs.url }}'
