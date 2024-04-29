@@ -1,0 +1,31 @@
+#!/bin/bash
+
+function check() {
+        cd $PROJECT_DIRECTORY
+		FETCH_TEST="$(git fetch -f --tags --dry-run 2>&1 | grep -o "\[.*\]" | sed -e 's/\[//' -e 's/\]//')"
+        [ -z "$FETCH_TEST" ] && return 0 || send_slack "Git fetch got: $FETCH_TEST"
+        git fetch -f --prune --prune-tags &>/dev/null # Sync tags from remote
+        # Checking commit hash
+        if [[ "$(git rev-list --tags --max-count=1)" == "$(git rev-parse HEAD)" ]]; then
+                send_slack "Local and remote commit hashes are the same. Check commits on Github."
+                return 1
+        fi
+        TAG="$(git describe --tags $(git rev-list --tags --max-count=1))" # Get latest tag
+        git switch -c $TAG >/dev/null 2>>$LOG_FILE
+        git checkout $TAG >/dev/null 2>>$LOG_FILE
+        PULL="$(git pull origin $TAG)"
+        if [[ $PULL =~ "Already up to date" ]]; then
+                send_slack "Nothing to pull from git! Check how tag is created."
+                return 1
+        fi
+        iecho "$(date) New tag released $TAG, starting with deploy..."
+        send_slack "New tag released $TAG, starting with deploy..."
+        git pull --tags &>$LOG_FILE
+
+        # Checking commit hash
+        if [[ "$(git rev-list --tags --max-count=1)" != "$(git rev-parse HEAD)" ]];then
+                send_slack "Local and remote commit hashes are not the same after git checkout and pull commands."
+                return 1
+        fi
+	~/bin/update.sh
+}

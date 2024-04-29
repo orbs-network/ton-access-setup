@@ -1,0 +1,28 @@
+#!/bin/bash
+
+function generateSystemdService() {
+    echo -n "[10/11] Generating service job for updater script... "
+    [ -f "/etc/systemd/system/$UPDATER_SERVICE" ] && rm "/etc/systemd/system/$UPDATER_SERVICE"
+    if [ -z "$(systemctl --all list-unit-files -t service | grep -w "$UPDATER_SERVICE")" ]
+    then
+        cat > "/etc/systemd/system/$UPDATER_SERVICE" << ENDSERVICE
+[Unit]
+Description=Updater script for Ton Access Setup 
+After=network.target
+
+[Service]
+User=$USER
+Type=simple
+ExecStart=/bin/bash $UPDATER_SCRIPT
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+ENDSERVICE
+    else
+        echo "$UPDATER_SERVICE already exist! Status: $(systemctl is-active $UPDATER_SERVICE)($(systemctl is-enabled $UPDATER_SERVICE))"
+    fi
+    [ ! -s "/etc/systemd/system/$UPDATER_SERVICE" ] && eecho "Failed to generate $UPDATER_SERVICE. Create service manually. You can find service in install.sh script inside \"### Generate updater service\" section."
+    echo "Done"
+}

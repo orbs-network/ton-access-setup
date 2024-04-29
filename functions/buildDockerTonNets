@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function buildByTagBranch() {
+    # Function parameters
+    local TAG="$1"
+    local BRANCH="$2"
+    # Set the environment variable    
+    export IMAGE_TAG="$TAG"
+    export TON_BRANCH="$BRANCH"
+    # Run docker compose build
+    if ! docker compose build --no-cache; then eecho "Unable to build tag: $TAG and branch: $BRANCH!"; fi
+}
+
+function build() {
+	[ -d "$TON_HTTP_API_DIR" ] && rm -r $TON_HTTP_API_DIR
+	git clone "$TON_HTTP_API_URL" && THA="$(basename "$_" .git)"
+	cd "$THA" || eecho "Unable to clone TON HTTP API project from GitHub or variable THA is empty!";
+	cp ../build-v2.env ./.env
+	git checkout v3
+	# build mainnet
+	buildByTagBranch "mainnet" "master"
+	# build testnet
+	buildByTagBranch "testnet" "testnet"
+	cd - || eecho "Unable to return to previous directory $OLD_PWD"
+	rm -r "$THA"
+}

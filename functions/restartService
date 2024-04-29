@@ -1,0 +1,11 @@
+#!/bin/bash
+
+function restartService () {
+    echo -n "[11/11] Enabling and restarting $UPDATER_SERVICE... "
+    systemctl stop "$UPDATER_SERVICE" &>/dev/null
+    systemctl daemon-reload 
+    systemctl start "$UPDATER_SERVICE" &>/dev/null
+    systemctl enable "$UPDATER_SERVICE" &>/dev/null
+    [ "$(systemctl is-active "$UPDATER_SERVICE" &>/dev/null; echo $?)" -gt 0 ] && eecho "$UPDATER_SERVICE not started! Check service with \"systemctl status $UPDATER_SERVICE\" ."
+    echo "Done"
+}

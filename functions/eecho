@@ -1,0 +1,7 @@
+#!/bin/bash
+
+function eecho() {
+	printf "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: %s\n" "$@" 1>&2 >$LOG_FILE
+	send_slack "$@"
+	exit 1;
+}

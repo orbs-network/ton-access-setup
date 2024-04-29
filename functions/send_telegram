@@ -1,0 +1,7 @@
+#!/bin/bash
+
+function send_telegram () {
+	([ -z "$TELEGRAM_GROUP_ID" ] || [ -z "$TELEGRAM_BOT_TOKEN" ]) && eecho "Unable to send telegram because requred variables TELEGRAM_GROUP_ID and TELEGRAM_BOT_TOKEN are not present!"
+    FORMATED_MESSAGE="$(echo "$1" | sed 's/"/\\"/g' | sed "s/'/\\'/g" )"
+    curl -s --data "text=$FORMATED_MESSAGE" --data "chat_id=$TELEGRAM_GROUP_ID" 'https://api.telegram.org/bot'$BOT_TOKEN'/sendMessage' > /dev/null
+}
