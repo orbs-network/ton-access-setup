@@ -2,7 +2,7 @@
 
 export USER="$(whoami)"
 #export HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
-export HOME_DIR="$HOME"
+export HOME_DIR="./"
 export BIN_DIR="$HOME_DIR/bin"
 export HOME_TON_ACCESS_DIR="$HOME_DIR/ton-access"
 export TON_HTTP_API_DIR="ton-http-api"
