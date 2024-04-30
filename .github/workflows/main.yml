@@ -12,4 +12,4 @@ jobs:
       - name: List my path
         run: ls -lah *; pwd; env
       - name: Install
-        run: bash -x ./install.sh
+        run: sudo bash -x ./install.sh

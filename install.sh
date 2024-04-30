@@ -2,21 +2,22 @@
 
 export USER="ubuntu"
 export HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
-export BIN_DIR="$HOME_DIR/bin"
-export HOME_TON_ACCESS_DIR="$HOME_DIR/ton-access"
+export BIN_DIR="${HOME_DIR}bin"
+export HOME_TON_ACCESS_DIR="${HOME_DIR}ton-access"
 export TON_HTTP_API_DIR="ton-http-api"
 export TON_HTTP_API_URL="https://github.com/toncenter/ton-http-api"
-export declare -a DEPENDENCY_APPS=("git python3 curl crontab docker mytonctrl jq gh")
+export declare -a DEPENDENCY_APPS=("git python3 curl crontab docker mytonctrl jq")
 export SCRIPT_NAME="${0##*/}"
 export PROJECT_DIRECTORY="$(dirname "$(realpath $SCRIPT_NAME)")"
-export PROJECT_TON_ACCESS_DIR="$PROJECT_DIRECTORY/ton-access"
+export PROJECT_TON_ACCESS_DIR="${PROJECT_DIRECTORY}/ton-access"
 export GENERATED_LOCAL_CONF="$(awk -F '\"' '/defaultLocalConfigPath/ {print $2}' /usr/src/mytonctrl/mytoninstaller.py)"
+export CONFIG_FILE="${PROJECT_DIRECTORY}/install_conf.json"
 
 ### Functions
-source $BIN_DIR/functions/eecho
-source $BIN_DIR/functions/send_slack
-source $BIN_DIR/functions/buildDockerTonNets
-#source $BIN_DIR/functions/send_telegram
+source $PROJECT_DIRECTORY/functions/eecho || { echo "Unable to source function eecho!";exit 1; }
+source $PROJECT_DIRECTORY/functions/send_slack || { echo "Unable to source function send_slack!";exit 1; }
+#source $PROJECT_DIRECTORY/functions/buildDockerTonNets || { echo "Unable to source function buildDockerTonNets!";exit 1; }
+#source $PROJECT_DIRECTORY/functions/send_telegram
 
 ### Checks
 # Execute as root
@@ -40,7 +41,7 @@ SLACK_URL="$(jq -r '.SLACK_URL' $CONFIG_FILE)"
 # If user have home dir
 [ ! -d "$HOME_DIR" ] && eecho "Unable to find home directory for \"$USER\"."
 # Can user execute docke command
-[ "$(docker ps &>/dev/null; echo $?)" -gt 0 ] && eecho "User $USER is unable to execute docker commands! Add docker group to $USER."
+[ "$(sudo -u $USER -- docker ps &>/dev/null; echo $?)" -gt 0 ] && eecho "User $USER is unable to execute docker commands! Add docker group to $USER."
 # Is SCRIPT_NAME variable empty
 [ -z "$SCRIPT_NAME" ] && eecho "SCRIPT_NAME variable is empty. Check command \"basename \$0\""
 # Is PROJECT_DIRECTORY variable empty
