@@ -1,5 +1,9 @@
 #!/bin/bash
 
+source $PROJECT_DIRECTORY/functions/eecho || { echo "Unable to source function eecho!";exit 1; }
+source $PROJECT_DIRECTORY/functions/send_slack || { echo "Unable to source function send_slack!";exit 1; }
+
+
 ### Initial setup
 
 echo -n "[1/11] Creating config directory... "
@@ -50,7 +54,7 @@ echo "Done"
 
 echo -n "[8/11] Executing \"docker compose up -d\" in $HOME_TON_ACCESS_DIR as root... "
 cd "$HOME_TON_ACCESS_DIR" || eecho "Unable to change directory to HOME_TON_ACCESS_DIR"
-if ! sudo docker compose -f docker-compose.yaml up -d; then eecho "Failed to run docker compose up."; send_telegram "Failed to run docker compose up."; fi
+if ! sudo docker compose -f docker-compose.yaml up -d; then eecho "Failed to run docker compose up."; fi #send_telegram "Failed to run docker compose up."; fi
 cd - || eecho "Unable to return to previous directory $OLD_PWD"
 echo "Done"
 
