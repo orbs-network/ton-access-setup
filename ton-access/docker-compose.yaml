@@ -80,7 +80,7 @@ services:
           cpus: "2"
           memory: 2gb
   mngr:
-    image: orbsnetwork/ton-access-mngr:v1.1.5
+    image: orbsnetwork/ton-access-mngr:v1.1.6
     healthcheck:
       test: curl -sS http://127.0.0.1:3000/health || echo 1
       interval: 15s
@@ -88,6 +88,8 @@ services:
       retries: 12
     env_file:
       - fastly.env
+    environment:
+      - CHECK_TESTNET=0
     deploy:
       resources:
         limits:
