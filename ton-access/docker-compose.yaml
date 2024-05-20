@@ -48,7 +48,7 @@ services:
       timeout: 3s
       retries: 12
   v4-mainnet:
-    image: "orbsnetwork/ton-api-v4:v46"
+    image: "tonwhales/ton-api-v4:v49"
     restart: unless-stopped
     environment:
       - TON_CONFIG=http://nginx/ton/local.config.json
@@ -58,7 +58,7 @@ services:
           cpus: "2"
           memory: 500m
   v4-testnet:
-    image: "orbsnetwork/ton-api-v4:v46"
+    image: "tonwhales/ton-api-v4:v49"
     restart: unless-stopped
     environment:
       - TON_CONFIG=https://orbs-ton-gateway.s3.us-east-2.amazonaws.com/live-testnet.json
