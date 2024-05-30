@@ -1,7 +1,6 @@
-version: "3.7"
 services:
   v2-mainnet:
-    image: toncenter/ton-http-api:mainnet
+    image: toncenter/ton-http-api:v2.0.41
     volumes:
       - /usr/bin/ton/:/ton
     env_file:
@@ -11,12 +10,10 @@ services:
       - TON_API_CACHE_REDIS_ENDPOINT=cache_redis
       - TON_API_CACHE_REDIS_PORT=6379
       - TON_API_CACHE_REDIS_TIMEOUT=1
-      - TON_API_CACHE_ENABLED=0
-      - TON_REPO=
-      - TON_BRANCH=master
-      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json    
+      - TON_API_CACHE_ENABLED=0            
+      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json      
     restart: unless-stopped
-    command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
+    command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 8 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
     depends_on:
       - cache_redis
     healthcheck:
@@ -25,23 +22,21 @@ services:
       timeout: 3s
       retries: 12
   v2-testnet:
-    image: toncenter/ton-http-api:testnet
+    image: toncenter/ton-http-api:v2.0.41
     volumes:
       - ./config:/config
     env_file:
       - v2.env
     environment:
-      - TON_API_CACHE_ENABLED=0
-      - TON_REPO=
-      - TON_BRANCH=testnet
+      - TON_API_CACHE_ENABLED=0            
       - TON_API_TONLIB_LITESERVER_CONFIG=/config/global-testnet.json
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: 2gb
+          cpus: "9"
+          memory: 4gb
     restart: unless-stopped
-    command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
+    command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 3 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
     healthcheck:
       test: curl -sS http://127.0.0.1:8081${TON_API_ROOT_PATH}/healthcheck || echo 1
       interval: 15s
@@ -55,8 +50,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: 500m
+          cpus: "8"
+          memory: 2gb
   v4-testnet:
     image: "tonwhales/ton-api-v4:v49"
     restart: unless-stopped
@@ -65,8 +60,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: 500m
+          cpus: "4"
+          memory: 2gb
   cache_redis:
     image: redis:alpine
     volumes:
