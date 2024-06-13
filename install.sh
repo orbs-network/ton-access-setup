@@ -29,11 +29,10 @@ installAccessSetup() {
 	curl -sL https://ton-blockchain.github.io/testnet-global.config.json > $CONFIG_DIR/global-testnet.json; [ $? -gt 0 ] && eecho "Error occurred while trying to download global-testnet.json file!";
 	echo "Done"
 
- 	# Step doesn't work because of mytonctrl update to mytonctrl2
-	#echo "[3/6] Generating local configuration file... "
-	#python3 /usr/src/mytonctrl/mytoninstaller.py <<< clcf >/dev/null
-	#[ $? -gt 0 ] && eecho "Failed!"
-	#echo "Done"
+	echo "[3/6] Generating local configuration file... "
+	python3 -m mytoninstaller <<< clcf >/dev/null
+	[ $? -gt 0 ] && eecho "Failed!"
+	echo "Done"
 
 	echo -n "[4/6] Copying ton-access to $HOME_DIR... "
 	TON_ACCESS_DIR="$HOME_DIR/ton-access"
