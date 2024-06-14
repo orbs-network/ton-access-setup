@@ -5,6 +5,7 @@ HOME_DIR="$HOME"
 SLACK_URL=""
 SCRIPT_NAME=$(basename $0)
 TON_ACCESS_DIR=""
+export PYTHONPATH="/usr/src/mytonctrl"
 
 send_slack () {
 	curl -s -X POST $SLACK_URL -H 'Content-type: application/json' --data '{"text":"'"$(hostname): $1"'"}' >/dev/null
