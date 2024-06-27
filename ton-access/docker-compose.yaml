@@ -84,7 +84,7 @@ services:
     env_file:
       - fastly.env
     environment:
-      - CHECK_TESTNET=0
+      - CHECK_TESTNET=1
     deploy:
       resources:
         limits:
