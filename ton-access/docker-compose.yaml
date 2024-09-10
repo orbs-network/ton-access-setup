@@ -1,6 +1,6 @@
 services:
   v2-mainnet:
-    image: toncenter/ton-http-api:v2.0.41
+    image: c:v2.0.46
     volumes:
       - /usr/bin/ton/:/ton
     env_file:
@@ -22,7 +22,7 @@ services:
       timeout: 3s
       retries: 12
   v2-testnet:
-    image: toncenter/ton-http-api:v2.0.41
+    image: toncenter/ton-http-api:v2.0.46
     volumes:
       - ./config:/config
     env_file:
