@@ -1,6 +1,6 @@
 services:
   v2-mainnet:
-    image: c:v2.0.46
+    image: toncenter/ton-http-api:v2.0.46
     volumes:
       - /usr/bin/ton/:/ton
     env_file:
@@ -21,6 +21,12 @@ services:
       interval: 15s
       timeout: 3s
       retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
   v2-testnet:
     image: toncenter/ton-http-api:v2.0.46
     volumes:
@@ -42,6 +48,12 @@ services:
       interval: 15s
       timeout: 3s
       retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   v4-mainnet:
     image: "tonwhales/ton-api-v4:v49"
     restart: unless-stopped
@@ -52,6 +64,12 @@ services:
         limits:
           cpus: "8"
           memory: 2gb
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   v4-testnet:
     image: "tonwhales/ton-api-v4:v49"
     restart: unless-stopped
@@ -62,6 +80,12 @@ services:
         limits:
           cpus: "4"
           memory: 2gb
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   cache_redis:
     image: redis:alpine
     volumes:
@@ -74,6 +98,12 @@ services:
         limits:
           cpus: "2"
           memory: 2gb
+    logging:a
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   mngr:
     image: orbsnetwork/ton-access-mngr:v1.1.6
     healthcheck:
@@ -95,6 +125,12 @@ services:
       - v2-testnet
       - v4-mainnet
       - v4-testnet
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   nginx:
     image: nginx
     container_name: nginx
@@ -106,3 +142,8 @@ services:
     restart: unless-stopped
     depends_on:
       - mngr
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
