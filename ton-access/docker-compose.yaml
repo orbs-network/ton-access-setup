@@ -98,7 +98,7 @@ services:
         limits:
           cpus: "2"
           memory: 2gb
-    logging:a
+    logging:
       driver: "json-file"
       options:
         max-size: "10m"
