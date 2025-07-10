@@ -1,6 +1,6 @@
 services:
   v2-mainnet:
-    image: toncenter/ton-http-api:v2.0.53
+    image: toncenter/ton-http-api:v2.0.58
     volumes:
       - /usr/bin/ton/:/ton
     env_file:
@@ -10,8 +10,8 @@ services:
       - TON_API_CACHE_REDIS_ENDPOINT=cache_redis
       - TON_API_CACHE_REDIS_PORT=6379
       - TON_API_CACHE_REDIS_TIMEOUT=1
-      - TON_API_CACHE_ENABLED=0            
-      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json      
+      - TON_API_CACHE_ENABLED=0
+      - TON_API_TONLIB_LITESERVER_CONFIG=/ton/local.config.json
     restart: unless-stopped
     command: -c "gunicorn -k uvicorn.workers.UvicornWorker -w 8 --bind 0.0.0.0:8081 ${TON_API_GUNICORN_FLAGS} pyTON.main:app"
     depends_on:
@@ -26,15 +26,15 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-  
+
   v2-testnet:
-    image: toncenter/ton-http-api:v2.0.53
+    image: toncenter/ton-http-api:v2.0.58
     volumes:
       - ./config:/config
     env_file:
       - v2.env
     environment:
-      - TON_API_CACHE_ENABLED=0            
+      - TON_API_CACHE_ENABLED=0
       - TON_API_TONLIB_LITESERVER_CONFIG=/config/global-testnet.json
     deploy:
       resources:
@@ -138,7 +138,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
-      - /usr/bin/ton/:/ton    
+      - /usr/bin/ton/:/ton
     restart: unless-stopped
     depends_on:
       - mngr
