@@ -1,6 +1,6 @@
 services:
   v2-mainnet:
-    image: toncenter/ton-http-api:v2.0.63
+    image: toncenter/ton-http-api:v2.0.64
     volumes:
       - /usr/bin/ton/:/ton
     env_file:
@@ -28,7 +28,7 @@ services:
         max-file: "3"
 
   v2-testnet:
-    image: toncenter/ton-http-api:v2.0.63
+    image: toncenter/ton-http-api:v2.0.64
     volumes:
       - ./config:/config
     env_file:
@@ -55,7 +55,7 @@ services:
         max-file: "3"
 
   v4-mainnet:
-    image: "tonwhales/ton-api-v4:v49"
+    image: "tonwhales/ton-api-v4:v59"
     restart: unless-stopped
     environment:
       - TON_CONFIG=http://nginx/ton/local.config.json
@@ -71,7 +71,7 @@ services:
         max-file: "3"
 
   v4-testnet:
-    image: "tonwhales/ton-api-v4:v49"
+    image: "tonwhales/ton-api-v4:v59"
     restart: unless-stopped
     environment:
       - TON_CONFIG=https://orbs-ton-gateway.s3.us-east-2.amazonaws.com/live-testnet.json
